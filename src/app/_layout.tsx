@@ -1,6 +1,16 @@
+import HomeScreen from ".";
 import "../global.css";
-import { Stack } from "expo-router";
+import { Color, Stack } from "expo-router";
 
 export default function RootLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return(
+  <Stack
+  screenOptions={{
+    headerTitle : "Qiyam App" ,
+    headerTitleAlign: "center",
+    headerStyle: {backgroundColor : "#156195"},
+    headerTintColor : "white" ,
+    headerTitleStyle : {fontWeight : "bold"}} }
+  />
+);
 }

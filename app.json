@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Qiyam App",
-    "slug": "qiyam_app",
+    "slug": "qiyam-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/splash-logo.png",
