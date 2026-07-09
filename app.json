@@ -4,7 +4,7 @@
     "slug": "qiyam-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/splash-logo.png",
+    "icon": "./assets/images/splash_icon.png",
     "scheme": "qiyamapp",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -29,8 +29,8 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#fefefd",
-          "image": "./assets/images/splash-logo.png",
-          "imageWidth": 60
+          "image": "./assets/images/splash_icon.png",
+          "imageWidth": 70
         }
       ]
     ],
