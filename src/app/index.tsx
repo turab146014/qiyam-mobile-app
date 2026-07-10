@@ -21,7 +21,7 @@ export default function HomeScreen(){
 
         <View className='flex-1 bg-[#fefefd] rounded-t-3xl px-5 py-5 mt-28 gap-5'>
 
-          <Pressable className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c]"
+          <Pressable className="rounded-2xl flex-row items-center p-4 border border-[#d6a85c]"
           onPress = {() => router.push("/majlis-alert")}
           >
 
