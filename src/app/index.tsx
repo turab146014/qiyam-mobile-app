@@ -19,9 +19,9 @@ export default function HomeScreen(){
           <Text className='font-semibold text-base color-white'>May Allah Bless Your Day</Text>
         </View>
 
-        <View className='flex-1 bg-[#fefefd] rounded-t-3xl px-5 py-5 mt-28 gap-5'>
+        <View className='flex-1 bg-[#fdf9f4] rounded-3xl px-5 py-5 mt-28 gap-5'>
 
-          <Pressable className="rounded-2xl flex-row items-center p-4 border border-[#d6a85c]"
+          <Pressable className="bg-white rounded-2xl flex-row items-center p-4 border  border-[#d6a85c]"
           onPress = {() => router.push("/majlis-alert")}
           >
 
