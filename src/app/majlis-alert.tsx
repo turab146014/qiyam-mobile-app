@@ -21,18 +21,17 @@ const filters = [
 
 const dummyMajlisCard = [
   {
-    id : 1,
-    name : "Majlis e Aza Imam Hussain (A.S)",
-    category : "majlis",
-    time : "Today at 7:30 P.m",
-    date : "15 July 2026",
-    location : "Kashaan e Abbas Township Lahore",
-    distance : "5 k.m from your current location"
-  }
+    id: 1,
+    name: "Majlis e Aza Imam Hussain (A.S)",
+    category: "Majlis",
+    time: "Today at 7:30 P.m",
+    date: "15 July 2026",
+    location: "Kashaan e Abbas Township Lahore",
+    distance: "5 k.m from your current location",
+  },
 ];
 
 export default function MajlisAlertScreen() {
-
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -40,24 +39,23 @@ export default function MajlisAlertScreen() {
     "Upcoming soonest first",
   );
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [isloading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
   const handleSubmit = () => {
     setIsLoading(true);
 
-    console.log("Category Selected" ,selectedCategory);
-    console.log("Filter Selected" ,selectedFilter);
+    console.log("Category Selected", selectedCategory);
+    console.log("Filter Selected", selectedFilter);
 
-    setTimeout (() => {
+    setTimeout(() => {
       setIsLoading(false);
       setShowResults(true);
-    },1500);
-
+    }, 1500);
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1 bg-[#014037]">
       <ImageBackground
         source={require("../../assets/images/bg_image.png")}
         resizeMode="cover"
@@ -174,70 +172,82 @@ export default function MajlisAlertScreen() {
           </View>
 
           <Pressable
-            disabled = {isloading}
+            disabled={isLoading}
             onPress={handleSubmit}
             className="bg-[#025e44] rounded-xl py-4 px-4 flex-row items-center justify-center mt-10"
           >
-            <Text className="text-white text- font-bold ml-2">{isloading ? "Searching..." :"Submit"} </Text>
+            <Text className="text-white text- font-bold ml-2">
+              {isLoading ? "Searching..." : "Submit"}{" "}
+            </Text>
           </Pressable>
 
           {showResults && (
             <View className="items-center mt-6">
-              <Text className="text-xl font-semibold text-{#023f38}mb-3">Nearby Majlis
+              <Text className="text-xl font-semibold text-{#023f38}mb-3">
+                Nearby Majlis
               </Text>
 
               {dummyMajlisCard.map((item) => (
-              <View
-              key={item.id}
-              className="bg-white border border-[#d6a85c] rounded-xl p-4 mt-4">
-                <Text className="text-lg font-bold text-[#023f38]">
-                  {item.name}
-                </Text>
-
-                <View className="flex-row items-center mt-3">
-                  <MaterialCommunityIcons
-                    name="clock-outline"
-                    size={18}
-                    color="#023f38"
-                  />
-
-                  <Text className="text-sm text-[#023f38] ml-2">
-                    {item.time} • {item.date}
+                <Pressable
+                  key={item.id}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/majlis-alert-detail",
+                      params: {
+                        name: item.name,
+                        category: item.category,
+                        time: item.time,
+                        date: item.date,
+                        location: item.location,
+                        distance: item.distance,
+                      },
+                    })
+                  }
+                  className="bg-white border border-[#d6a85c] rounded-xl p-4 mt-4"
+                >
+                  <Text className="text-lg font-bold text-[#023f38]">
+                    {item.name}
                   </Text>
-                </View>
 
-                <View className="flex-row items-center mt-2">
-                  <MaterialCommunityIcons
-                    name="map-marker-outline"
-                    size={18}
-                    color="#023f38"
-                  />
+                  <View className="flex-row items-center mt-3">
+                    <MaterialCommunityIcons
+                      name="clock-outline"
+                      size={18}
+                      color="#023f38"
+                    />
 
-                  <Text className="text-sm text-[#023f38] ml-2 flex-1">
-                    {item.location}
-                  </Text>
-                </View>
+                    <Text className="text-sm text-[#023f38] ml-2">
+                      {item.time} • {item.date}
+                    </Text>
+                  </View>
 
-                <View className="flex-row items-center mt-2">
-                  <MaterialCommunityIcons
-                    name="map-marker-distance"
-                    size={18}
-                    color="#023f38"
-                  />
+                  <View className="flex-row items-center mt-2">
+                    <MaterialCommunityIcons
+                      name="map-marker-outline"
+                      size={18}
+                      color="#023f38"
+                    />
 
-                  <Text className="text-sm text-[#023f38] ml-2">
-                    {item.distance}
-                  </Text>
-                </View>
+                    <Text className="text-sm text-[#023f38] ml-2 flex-1">
+                      {item.location}
+                    </Text>
+                  </View>
 
+                  <View className="flex-row items-center mt-2">
+                    <MaterialCommunityIcons
+                      name="map-marker-distance"
+                      size={18}
+                      color="#023f38"
+                    />
 
-
-              </View>
-
-          ))}
+                    <Text className="text-sm text-[#023f38] ml-2">
+                      {item.distance}
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
             </View>
-        )}
-
+          )}
         </View>
       </ImageBackground>
     </SafeAreaView>
