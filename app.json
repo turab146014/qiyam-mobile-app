@@ -32,7 +32,10 @@
           "image": "./assets/images/splash_icon.png",
           "imageWidth": 70
         }
-      ]
+      ],
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
