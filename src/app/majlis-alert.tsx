@@ -61,16 +61,24 @@ export default function MajlisAlertScreen() {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [filteredMajlis, setFilteredMajlis] = useState(dummyMajlisCard);
 
   const handleSubmit = () => {
     setIsLoading(true);
 
     console.log("Category Selected", selectedCategory);
     console.log("Filter Selected", selectedFilter);
+    let results = dummyMajlisCard;
+    if (selectedCategory !== "All") {
+      results = dummyMajlisCard.filter(
+        (item) => item.category === selectedCategory
+      );
+    }
 
     setTimeout(() => {
       setIsLoading(false);
       setShowResults(true);
+      setFilteredMajlis(results);
     }, 1500);
   };
 
@@ -207,8 +215,14 @@ export default function MajlisAlertScreen() {
                 <Text className="text-xl font-semibold text-{#023f38}mb-3">
                   Nearby Majlis
                 </Text>
+                {filteredMajlis.length === 0 ? (
+                  <Text className="text-center text-[#023f38] mt-4">
+                    No Majlis found for this category.
+                  </Text>
+                ) : (
 
-                {dummyMajlisCard.map((item) => (
+
+                filteredMajlis.map((item) => (
                   <Pressable
                     key={item.id}
                     onPress={() =>
@@ -266,7 +280,7 @@ export default function MajlisAlertScreen() {
                       </Text>
                     </View>
                   </Pressable>
-                ))}
+                )))}
               </View>
             )}
           </View>
