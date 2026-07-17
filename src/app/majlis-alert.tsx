@@ -1,4 +1,10 @@
-import { Text, View, Pressable, ImageBackground, ScrollView } from "react-native";
+import {
+  Text,
+  View,
+  Pressable,
+  ImageBackground,
+  ScrollView,
+} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,7 +18,6 @@ const categories = [
   "Niaz Place",
   "Jaloos",
 ];
-
 
 const filters = [
   "Upcoming soonest first",
@@ -31,24 +36,23 @@ const dummyMajlisCard = [
     distance: "2 km from your current location",
   },
   {
-  id: 2,
-  name: "Dars at Markazi Imambargah",
-  category: "Dars",
-  time: "Tomorrow at 6:00 PM",
-  date: "16 July 2026",
-  location: "Model Town, Lahore",
-  distance: "3 km from your current location",
- },
-{
-  id: 3,
-  name: "Ladies Majlis at Hussainia Hall",
-  category: "Ladies Majlis",
-  time: "Friday at 5:00 PM",
-  date: "18 July 2026",
-  location: "Johar Town, Lahore",
-  distance: "7 km from your current location",
-},
-
+    id: 2,
+    name: "Dars at Markazi Imambargah",
+    category: "Dars",
+    time: "Tomorrow at 6:00 PM",
+    date: "16 July 2026",
+    location: "Model Town, Lahore",
+    distance: "3 km from your current location",
+  },
+  {
+    id: 3,
+    name: "Ladies Majlis at Hussainia Hall",
+    category: "Ladies Majlis",
+    time: "Friday at 5:00 PM",
+    date: "18 July 2026",
+    location: "Johar Town, Lahore",
+    distance: "7 km from your current location",
+  },
 ];
 
 export default function MajlisAlertScreen() {
@@ -71,7 +75,7 @@ export default function MajlisAlertScreen() {
     let results = dummyMajlisCard;
     if (selectedCategory !== "All") {
       results = dummyMajlisCard.filter(
-        (item) => item.category === selectedCategory
+        (item) => item.category === selectedCategory,
       );
     }
 
@@ -156,7 +160,9 @@ export default function MajlisAlertScreen() {
                 onPress={() => setShowFilterDropdown(!showFilterDropdown)}
                 className=" bg-white border border-[#d6a85c] rounded-xl px-4 py-3 flex-row items-center justify-between"
               >
-                <Text className="text-base text-[#023f38]">{selectedFilter}</Text>
+                <Text className="text-base text-[#023f38]">
+                  {selectedFilter}
+                </Text>
 
                 <MaterialCommunityIcons
                   name={showFilterDropdown ? "chevron-up" : "chevron-down"}
@@ -176,7 +182,9 @@ export default function MajlisAlertScreen() {
                       }}
                       className="px-2 py-3 border-b border-gray-200"
                     >
-                      <Text className=" font-semibold m-4 text-lg">{filter}</Text>
+                      <Text className=" font-semibold m-4 text-lg">
+                        {filter}
+                      </Text>
                     </Pressable>
                   ))}
                 </View>
@@ -220,67 +228,66 @@ export default function MajlisAlertScreen() {
                     No Majlis found for this category.
                   </Text>
                 ) : (
-
-
-                filteredMajlis.map((item) => (
-                  <Pressable
-                    key={item.id}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/majlis-alert-detail",
-                        params: {
-                          name: item.name,
-                          category: item.category,
-                          time: item.time,
-                          date: item.date,
-                          location: item.location,
-                          distance: item.distance,
-                        },
-                      })
-                    }
-                    className="bg-white border border-[#d6a85c] rounded-xl p-4 mt-4"
-                  >
-                    <Text className="text-lg font-bold text-[#023f38]">
-                      {item.name}
-                    </Text>
-
-                    <View className="flex-row items-center mt-3">
-                      <MaterialCommunityIcons
-                        name="clock-outline"
-                        size={18}
-                        color="#023f38"
-                      />
-
-                      <Text className="text-sm text-[#023f38] ml-2">
-                        {item.time} • {item.date}
+                  filteredMajlis.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/majlis-alert-detail",
+                          params: {
+                            name: item.name,
+                            category: item.category,
+                            time: item.time,
+                            date: item.date,
+                            location: item.location,
+                            distance: item.distance,
+                          },
+                        })
+                      }
+                      className="bg-white border border-[#d6a85c] rounded-xl p-4 mt-4"
+                    >
+                      <Text className="text-lg font-bold text-[#023f38]">
+                        {item.name}
                       </Text>
-                    </View>
 
-                    <View className="flex-row items-center mt-2">
-                      <MaterialCommunityIcons
-                        name="map-marker-outline"
-                        size={18}
-                        color="#023f38"
-                      />
+                      <View className="flex-row items-center mt-3">
+                        <MaterialCommunityIcons
+                          name="clock-outline"
+                          size={18}
+                          color="#023f38"
+                        />
 
-                      <Text className="text-sm text-[#023f38] ml-2 flex-1">
-                        {item.location}
-                      </Text>
-                    </View>
+                        <Text className="text-sm text-[#023f38] ml-2">
+                          {item.time} • {item.date}
+                        </Text>
+                      </View>
 
-                    <View className="flex-row items-center mt-2">
-                      <MaterialCommunityIcons
-                        name="map-marker-distance"
-                        size={18}
-                        color="#023f38"
-                      />
+                      <View className="flex-row items-center mt-2">
+                        <MaterialCommunityIcons
+                          name="map-marker-outline"
+                          size={18}
+                          color="#023f38"
+                        />
 
-                      <Text className="text-sm text-[#023f38] ml-2">
-                        {item.distance}
-                      </Text>
-                    </View>
-                  </Pressable>
-                )))}
+                        <Text className="text-sm text-[#023f38] ml-2 flex-1">
+                          {item.location}
+                        </Text>
+                      </View>
+
+                      <View className="flex-row items-center mt-2">
+                        <MaterialCommunityIcons
+                          name="map-marker-distance"
+                          size={18}
+                          color="#023f38"
+                        />
+
+                        <Text className="text-sm text-[#023f38] ml-2">
+                          {item.distance}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  ))
+                )}
               </View>
             )}
           </View>
