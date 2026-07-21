@@ -34,6 +34,8 @@ const dummyMajlisCard = [
     date: "16 July 2026",
     location: "Jamia tul Muntazar Lahore",
     distance: "2 km from your current location",
+    distanceKm : 2,
+    timeOrder : 1,
   },
   {
     id: 2,
@@ -43,6 +45,8 @@ const dummyMajlisCard = [
     date: "16 July 2026",
     location: "Model Town, Lahore",
     distance: "3 km from your current location",
+    distanceKm : 3,
+    timeOrder : 2,
   },
   {
     id: 3,
@@ -52,6 +56,8 @@ const dummyMajlisCard = [
     date: "18 July 2026",
     location: "Johar Town, Lahore",
     distance: "7 km from your current location",
+    distanceKm : 6,
+    timeOrder : 3,
   },
 ];
 
@@ -66,6 +72,8 @@ export default function MajlisAlertScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [filteredMajlis, setFilteredMajlis] = useState(dummyMajlisCard);
+  const [selectedDistance, setSelectedDistance] = useState(5);
+
 
   const handleSubmit = () => {
     setIsLoading(true);
@@ -78,6 +86,20 @@ export default function MajlisAlertScreen() {
         (item) => item.category === selectedCategory,
       );
     }
+
+    if(selectedFilter == "Upcoming soonest first"){
+      results = [...results].sort((a,b) => a.timeOrder - b.timeOrder);
+    }
+
+    if(selectedFilter == "Oldest first"){
+      results = [...results].sort((a,b) => b.timeOrder - a.timeOrder);
+    }
+
+    if(selectedFilter == "Nearest distance first"){
+      results = [...results].sort((a,b) => a.distanceKm - b.distanceKm);
+    }
+
+    results = results.filter((item) => item.distanceKm <= selectedDistance)
 
     setTimeout(() => {
       setIsLoading(false);
@@ -196,7 +218,7 @@ export default function MajlisAlertScreen() {
                 Distance
               </Text>
 
-              <Text className="text-lg font-medium text-[#023f38]">5.5 km</Text>
+              <Text className="text-lg font-medium text-[#023f38]">5 km</Text>
             </View>
 
             <View className="h-1 bg-gray-300 rounded-full">
@@ -204,7 +226,7 @@ export default function MajlisAlertScreen() {
             </View>
 
             <View className="flex-row items-center justify-between">
-              <Text className="text-sm text-[#023f38]">1 km</Text>
+              <Text className="text-sm text-[#023f38]">0 km</Text>
               <Text className="text-sm text-[#023f38]">20 km</Text>
             </View>
 
