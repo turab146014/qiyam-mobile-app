@@ -9,6 +9,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
+import MajlisCard from "../../components/majlis-card";
 
 const categories = [
   "All",
@@ -29,13 +30,13 @@ const dummyMajlisCard = [
   {
     id: 1,
     name: "Majlis e Aza Imam Hussain (A.S)",
-    category: "Majlis",
+    category: "Gents Majlis",
     time: "Today at 8:30 P.m",
     date: "16 July 2026",
     location: "Jamia tul Muntazar Lahore",
     distance: "2 km from your current location",
-    distanceKm : 2,
-    timeOrder : 1,
+    distanceKm: 2,
+    timeOrder: 1,
   },
   {
     id: 2,
@@ -45,8 +46,8 @@ const dummyMajlisCard = [
     date: "16 July 2026",
     location: "Model Town, Lahore",
     distance: "3 km from your current location",
-    distanceKm : 3,
-    timeOrder : 2,
+    distanceKm: 3,
+    timeOrder: 2,
   },
   {
     id: 3,
@@ -56,8 +57,8 @@ const dummyMajlisCard = [
     date: "18 July 2026",
     location: "Johar Town, Lahore",
     distance: "7 km from your current location",
-    distanceKm : 6,
-    timeOrder : 3,
+    distanceKm: 7,
+    timeOrder: 3,
   },
 ];
 
@@ -70,10 +71,12 @@ export default function MajlisAlertScreen() {
   );
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [filteredMajlis, setFilteredMajlis] = useState(dummyMajlisCard);
+  const [showResults, setShowResults] = useState(true);
+  const [filteredMajlis, setFilteredMajlis] = useState(
+    [...dummyMajlisCard].sort((a, b) => a.timeOrder - b.timeOrder),
+  );
   const [selectedDistance, setSelectedDistance] = useState(5);
-
+  const distanceOptions = [5, 10, 15, 20];
 
   const handleSubmit = () => {
     setIsLoading(true);
@@ -87,19 +90,19 @@ export default function MajlisAlertScreen() {
       );
     }
 
-    if(selectedFilter == "Upcoming soonest first"){
-      results = [...results].sort((a,b) => a.timeOrder - b.timeOrder);
+    if (selectedFilter == "Upcoming soonest first") {
+      results = [...results].sort((a, b) => a.timeOrder - b.timeOrder);
     }
 
-    if(selectedFilter == "Oldest first"){
-      results = [...results].sort((a,b) => b.timeOrder - a.timeOrder);
+    if (selectedFilter == "Oldest first") {
+      results = [...results].sort((a, b) => b.timeOrder - a.timeOrder);
     }
 
-    if(selectedFilter == "Nearest distance first"){
-      results = [...results].sort((a,b) => a.distanceKm - b.distanceKm);
+    if (selectedFilter == "Nearest distance first") {
+      results = [...results].sort((a, b) => a.distanceKm - b.distanceKm);
     }
 
-    results = results.filter((item) => item.distanceKm <= selectedDistance)
+    results = results.filter((item) => item.distanceKm <= selectedDistance);
 
     setTimeout(() => {
       setIsLoading(false);
@@ -218,11 +221,16 @@ export default function MajlisAlertScreen() {
                 Distance
               </Text>
 
-              <Text className="text-lg font-medium text-[#023f38]">5 km</Text>
+              <Text className="text-lg font-medium text-[#023f38]">
+                {selectedDistance} km
+              </Text>
             </View>
 
             <View className="h-1 bg-gray-300 rounded-full">
-              <View className="h-1 w-1/3 bg-[#d6a85c] rounded-full" />
+              <View
+                className="h-1 bg-[#d6a85c] rounded-full"
+                style={{ width: `${(selectedDistance / 20) * 100}%` }}
+              />
             </View>
 
             <View className="flex-row items-center justify-between">
@@ -230,19 +238,43 @@ export default function MajlisAlertScreen() {
               <Text className="text-sm text-[#023f38]">20 km</Text>
             </View>
 
+            <View className="flex-row items-center justify-between mt-4">
+              {distanceOptions.map((distance) => (
+                <Pressable
+                  key={distance}
+                  onPress={() => setSelectedDistance(distance)}
+                  className={`px-3 py-2 rounded-full border ${
+                    selectedDistance == distance
+                      ? "bg-[#025e44] border-[#025e44]"
+                      : "bg-white border-[#d6a85c]"
+                  }`}
+                >
+                  <Text
+                    className={`text-sm font-semibold ${
+                      selectedDistance === distance
+                        ? "text-white"
+                        : "text-[#023f38]"
+                    }`}
+                  >
+                    {distance} km
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
             <Pressable
               disabled={isLoading}
               onPress={handleSubmit}
               className="bg-[#025e44] rounded-xl py-4 px-4 flex-row items-center justify-center mt-10"
             >
-              <Text className="text-white text- font-bold ml-2">
+              <Text className="text-white text-base font-bold ml-2">
                 {isLoading ? "Searching..." : "Submit"}{" "}
               </Text>
             </Pressable>
 
             {showResults && (
-              <View className="items-center mt-6">
-                <Text className="text-xl font-semibold text-{#023f38}mb-3">
+              <View className="mt-6 w-full gap-4">
+                <Text className="text-xl font-semibold text-[#023f38] mb-3">
                   Nearby Majlis
                 </Text>
                 {filteredMajlis.length === 0 ? (
@@ -251,8 +283,9 @@ export default function MajlisAlertScreen() {
                   </Text>
                 ) : (
                   filteredMajlis.map((item) => (
-                    <Pressable
+                    <MajlisCard
                       key={item.id}
+                      item={item}
                       onPress={() =>
                         router.push({
                           pathname: "/majlis-alert-detail",
@@ -266,48 +299,7 @@ export default function MajlisAlertScreen() {
                           },
                         })
                       }
-                      className="bg-white border border-[#d6a85c] rounded-xl p-4 mt-4"
-                    >
-                      <Text className="text-lg font-bold text-[#023f38]">
-                        {item.name}
-                      </Text>
-
-                      <View className="flex-row items-center mt-3">
-                        <MaterialCommunityIcons
-                          name="clock-outline"
-                          size={18}
-                          color="#023f38"
-                        />
-
-                        <Text className="text-sm text-[#023f38] ml-2">
-                          {item.time} • {item.date}
-                        </Text>
-                      </View>
-
-                      <View className="flex-row items-center mt-2">
-                        <MaterialCommunityIcons
-                          name="map-marker-outline"
-                          size={18}
-                          color="#023f38"
-                        />
-
-                        <Text className="text-sm text-[#023f38] ml-2 flex-1">
-                          {item.location}
-                        </Text>
-                      </View>
-
-                      <View className="flex-row items-center mt-2">
-                        <MaterialCommunityIcons
-                          name="map-marker-distance"
-                          size={18}
-                          color="#023f38"
-                        />
-
-                        <Text className="text-sm text-[#023f38] ml-2">
-                          {item.distance}
-                        </Text>
-                      </View>
-                    </Pressable>
+                    />
                   ))
                 )}
               </View>
