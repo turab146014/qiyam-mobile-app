@@ -1,19 +1,9 @@
 import { View, Text, Pressable } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Majlis } from "../src/types/majlis";
 
 type MajlisCardProps = {
-  item: {
-    id: number;
-    name: string;
-    category: string;
-    time: string;
-    date: string;
-    location: string;
-    distance: string;
-    distanceKm: number;
-    timeOrder: number;
-  };
-
+  item: Majlis;
   onPress: () => void;
 };
 

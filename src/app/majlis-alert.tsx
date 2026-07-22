@@ -8,8 +8,11 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MajlisCard from "../../components/majlis-card";
+import * as Location from "expo-location";
+import { calculateDistanceKm } from "../utils/distance";
+import type { Majlis } from "../types/majlis";
 
 const categories = [
   "All",
@@ -26,7 +29,7 @@ const filters = [
   "Nearest distance first",
 ];
 
-const dummyMajlisCard = [
+const dummyMajlisCard: Majlis[] = [
   {
     id: 1,
     name: "Majlis e Aza Imam Hussain (A.S)",
@@ -37,6 +40,8 @@ const dummyMajlisCard = [
     distance: "2 km from your current location",
     distanceKm: 2,
     timeOrder: 1,
+    latitude: 31.5204,
+    longitude: 74.3587,
   },
   {
     id: 2,
@@ -48,6 +53,8 @@ const dummyMajlisCard = [
     distance: "3 km from your current location",
     distanceKm: 3,
     timeOrder: 2,
+    latitude: 31.531,
+    longitude: 74.352,
   },
   {
     id: 3,
@@ -59,50 +66,103 @@ const dummyMajlisCard = [
     distance: "7 km from your current location",
     distanceKm: 7,
     timeOrder: 3,
+    latitude: 31.4697,
+    longitude: 74.2728,
   },
 ];
 
 export default function MajlisAlertScreen() {
   const router = useRouter();
+
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(
     "Upcoming soonest first",
   );
+
+  const [selectedDistance, setSelectedDistance] = useState(5);
+
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(true);
+
   const [filteredMajlis, setFilteredMajlis] = useState(
     [...dummyMajlisCard].sort((a, b) => a.timeOrder - b.timeOrder),
   );
-  const [selectedDistance, setSelectedDistance] = useState(5);
   const distanceOptions = [5, 10, 15, 20];
+
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  const getCurrentLocation = async () => {
+    setLocationLoading(true);
+    setLocationError("");
+
+    const { status } = await Location.requestForegroundPermissionsAsync();
+
+    if (status !== "granted") {
+      setLocationError("Permission Denied");
+      setLocationLoading(false);
+      return;
+    }
+
+    const location = await Location.getCurrentPositionAsync({});
+
+    setUserLocation({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    });
+
+    setLocationLoading(false);
+  };
+
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
 
   const handleSubmit = () => {
     setIsLoading(true);
+    let results = dummyMajlisCard.map((item) => {
+      if (!userLocation) {
+        return item;
+      }
 
-    console.log("Category Selected", selectedCategory);
-    console.log("Filter Selected", selectedFilter);
-    let results = dummyMajlisCard;
-    if (selectedCategory !== "All") {
-      results = dummyMajlisCard.filter(
-        (item) => item.category === selectedCategory,
+      const calculatedDistance = calculateDistanceKm(
+        userLocation.latitude,
+        userLocation.longitude,
+        item.latitude,
+        item.longitude,
       );
-    }
 
-    if (selectedFilter == "Upcoming soonest first") {
-      results = [...results].sort((a, b) => a.timeOrder - b.timeOrder);
-    }
+      return {
+        ...item,
+        distanceKm: calculatedDistance,
+        distance: `${calculatedDistance.toFixed(1)} km from your current location`,
+      };
+    });
 
-    if (selectedFilter == "Oldest first") {
-      results = [...results].sort((a, b) => b.timeOrder - a.timeOrder);
-    }
-
-    if (selectedFilter == "Nearest distance first") {
-      results = [...results].sort((a, b) => a.distanceKm - b.distanceKm);
+    if (selectedCategory !== "All") {
+      results = results.filter((item) => item.category === selectedCategory);
     }
 
     results = results.filter((item) => item.distanceKm <= selectedDistance);
+
+    if (selectedFilter === "Upcoming soonest first") {
+      results = [...results].sort((a, b) => a.timeOrder - b.timeOrder);
+    }
+
+    if (selectedFilter === "Oldest first") {
+      results = [...results].sort((a, b) => b.timeOrder - a.timeOrder);
+    }
+
+    if (selectedFilter === "Nearest distance first") {
+      results = [...results].sort((a, b) => a.distanceKm - b.distanceKm);
+    }
 
     setTimeout(() => {
       setIsLoading(false);
@@ -134,6 +194,22 @@ export default function MajlisAlertScreen() {
               </Text>
             </View>
           </View>
+
+          {locationLoading && (
+            <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
+              <Text className="text-[#023f38] font-semibold text-center">
+                Getting your current location...
+              </Text>
+            </View>
+          )}
+
+          {locationError !== "" && (
+            <View className="bg-white border border-red-300 rounded-xl p-4">
+              <Text className="text-red-600 font-semibold text-center">
+                {locationError}
+              </Text>
+            </View>
+          )}
 
           <View className="flex-1 bg-[#fdf9f4] rounded-3xl mt-16 p-6 gap-5">
             <View>
