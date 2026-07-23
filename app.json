@@ -11,6 +11,7 @@
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.fourteenlabs.qiyamapp",
       "adaptiveIcon": {
         "backgroundColor": "#fefefd",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
