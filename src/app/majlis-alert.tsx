@@ -1,78 +1,30 @@
-import {
-  Text,
-  View,
-  Pressable,
-  ImageBackground,
-  ScrollView,
-} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useEffect } from "react";
-import MajlisCard from "../../components/majlis-card";
-import * as Location from "expo-location";
-import { calculateDistanceKm } from "../utils/distance";
+import MajlisCard from "../components/majlis-card";
+import {
+  categories,
+  distanceOptions,
+  dummyMajlisCard,
+  filters,
+} from "../constants/majlis";
+import { useCurrentLocation } from "../hooks/useCurrentLocation";
 import type { Majlis } from "../types/majlis";
-
-const categories = [
-  "All",
-  "Dars",
-  "Ladies Majlis",
-  "Gents Majlis",
-  "Niaz Place",
-  "Jaloos",
-];
-
-const filters = [
-  "Upcoming soonest first",
-  "Oldest first",
-  "Nearest distance first",
-];
-
-const dummyMajlisCard: Majlis[] = [
-  {
-    id: 1,
-    name: "Majlis e Aza Imam Hussain (A.S)",
-    category: "Gents Majlis",
-    time: "Today at 8:30 P.m",
-    date: "16 July 2026",
-    location: "Jamia tul Muntazar Lahore",
-    distance: "2 km from your current location",
-    distanceKm: 2,
-    timeOrder: 1,
-    latitude: 31.5204,
-    longitude: 74.3587,
-  },
-  {
-    id: 2,
-    name: "Dars at Markazi Imambargah",
-    category: "Dars",
-    time: "Tomorrow at 6:00 PM",
-    date: "16 July 2026",
-    location: "Model Town, Lahore",
-    distance: "3 km from your current location",
-    distanceKm: 3,
-    timeOrder: 2,
-    latitude: 31.531,
-    longitude: 74.352,
-  },
-  {
-    id: 3,
-    name: "Ladies Majlis at Hussainia Hall",
-    category: "Ladies Majlis",
-    time: "Friday at 5:00 PM",
-    date: "18 July 2026",
-    location: "Johar Town, Lahore",
-    distance: "7 km from your current location",
-    distanceKm: 7,
-    timeOrder: 3,
-    latitude: 31.4697,
-    longitude: 74.2728,
-  },
-];
+import { calculateDistanceKm } from "../utils/distance";
+import { filterMajlisResults } from "../utils/filterMajlis";
+import { sortMajlisFilters } from "../utils/sortMajlis";
 
 export default function MajlisAlertScreen() {
   const router = useRouter();
+  const { userLocation, locationLoading, locationError } = useCurrentLocation();
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedFilter, setSelectedFilter] = useState(
@@ -87,43 +39,9 @@ export default function MajlisAlertScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(true);
 
-  const [filteredMajlis, setFilteredMajlis] = useState(
+  const [filteredMajlis, setFilteredMajlis] = useState<Majlis[]>(
     [...dummyMajlisCard].sort((a, b) => a.timeOrder - b.timeOrder),
   );
-  const distanceOptions = [5, 10, 15, 20];
-
-  const [userLocation, setUserLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [locationError, setLocationError] = useState("");
-
-  const getCurrentLocation = async () => {
-    setLocationLoading(true);
-    setLocationError("");
-
-    const { status } = await Location.requestForegroundPermissionsAsync();
-
-    if (status !== "granted") {
-      setLocationError("Permission Denied");
-      setLocationLoading(false);
-      return;
-    }
-
-    const location = await Location.getCurrentPositionAsync({});
-
-    setUserLocation({
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-    });
-
-    setLocationLoading(false);
-  };
-
-  useEffect(() => {
-    getCurrentLocation();
-  }, []);
 
   const handleSubmit = () => {
     setIsLoading(true);
@@ -146,23 +64,9 @@ export default function MajlisAlertScreen() {
       };
     });
 
-    if (selectedCategory !== "All") {
-      results = results.filter((item) => item.category === selectedCategory);
-    }
+    results = filterMajlisResults(results, selectedCategory, selectedDistance);
 
-    results = results.filter((item) => item.distanceKm <= selectedDistance);
-
-    if (selectedFilter === "Upcoming soonest first") {
-      results = [...results].sort((a, b) => a.timeOrder - b.timeOrder);
-    }
-
-    if (selectedFilter === "Oldest first") {
-      results = [...results].sort((a, b) => b.timeOrder - a.timeOrder);
-    }
-
-    if (selectedFilter === "Nearest distance first") {
-      results = [...results].sort((a, b) => a.distanceKm - b.distanceKm);
-    }
+    results = sortMajlisFilters(results, selectedFilter);
 
     setTimeout(() => {
       setIsLoading(false);
@@ -189,7 +93,7 @@ export default function MajlisAlertScreen() {
             </Pressable>
 
             <View>
-              <Text className="font-semibold text-white text-2xl">
+              <Text className="flex-1 font-semibold text-white text-2xl mr-8">
                 Majlis Alert
               </Text>
             </View>
@@ -211,14 +115,17 @@ export default function MajlisAlertScreen() {
             </View>
           )}
 
-          <View className="flex-1 bg-[#fdf9f4] rounded-3xl mt-16 p-6 gap-5">
+          <View className="bg-[#fdf9f4] rounded-3xl mt-16 p-6 gap-5 pb-10">
             <View>
               <Text className="text-xl font-semibold text-[#023f38] mb-3">
                 Category
               </Text>
 
               <Pressable
-                onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                onPress={() => {
+                  setShowCategoryDropdown(!showCategoryDropdown);
+                  setShowFilterDropdown(false);
+                }}
                 className=" bg-white border border-[#d6a85c] rounded-xl px-4 py-3 flex-row items-center justify-between"
               >
                 <Text className="text-base text-[#023f38]">
@@ -241,9 +148,9 @@ export default function MajlisAlertScreen() {
                         setSelectedCategory(category);
                         setShowCategoryDropdown(false);
                       }}
-                      className="px-2 py-3 border-b border-gray-200"
+                      className="px-4 py-3 border-b border-gray-200"
                     >
-                      <Text className=" font-semibold m-4 text-lg">
+                      <Text className="font-semibold text-[#023f38] text-base">
                         {category}
                       </Text>
                     </Pressable>
@@ -258,7 +165,10 @@ export default function MajlisAlertScreen() {
               </Text>
 
               <Pressable
-                onPress={() => setShowFilterDropdown(!showFilterDropdown)}
+                onPress={() => {
+                  setShowFilterDropdown(!showFilterDropdown);
+                  setShowCategoryDropdown(false);
+                }}
                 className=" bg-white border border-[#d6a85c] rounded-xl px-4 py-3 flex-row items-center justify-between"
               >
                 <Text className="text-base text-[#023f38]">
@@ -281,9 +191,9 @@ export default function MajlisAlertScreen() {
                         setSelectedFilter(filter);
                         setShowFilterDropdown(false);
                       }}
-                      className="px-2 py-3 border-b border-gray-200"
+                      className="px-4 py-3 border-b border-gray-200"
                     >
-                      <Text className=" font-semibold m-4 text-lg">
+                      <Text className="font-semibold text-[#023f38] text-base">
                         {filter}
                       </Text>
                     </Pressable>
@@ -320,7 +230,7 @@ export default function MajlisAlertScreen() {
                   key={distance}
                   onPress={() => setSelectedDistance(distance)}
                   className={`px-3 py-2 rounded-full border ${
-                    selectedDistance == distance
+                    selectedDistance === distance
                       ? "bg-[#025e44] border-[#025e44]"
                       : "bg-white border-[#d6a85c]"
                   }`}
