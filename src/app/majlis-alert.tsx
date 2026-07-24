@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ImageBackground,
   Pressable,
@@ -21,6 +21,7 @@ import type { Majlis } from "../types/majlis";
 import { calculateDistanceKm } from "../utils/distance";
 import { filterMajlisResults } from "../utils/filterMajlis";
 import { sortMajlisFilters } from "../utils/sortMajlis";
+import { getMajlisRows } from "../services/majlisService";
 
 export default function MajlisAlertScreen() {
   const router = useRouter();
@@ -74,6 +75,14 @@ export default function MajlisAlertScreen() {
       setFilteredMajlis(results);
     }, 1500);
   };
+
+  useEffect(() => {
+    const testFetchMajlisRows = async () => {
+    const rows = await getMajlisRows();
+    console.log("Appwrite Majlis Rows:", rows);
+  };
+    testFetchMajlisRows();
+}, []);
 
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">

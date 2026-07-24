@@ -5,7 +5,7 @@ export const appwriteConfig = {
   endpoint: "https://syd.cloud.appwrite.io/v1",
   projectId: "6a61f72e003c3258ed6a",
   platform: "com.fourteenlabs.qiyamapp",
-  databaseId: "qiyam_db",
+  databaseId: "6a61f9b40035dfd0f2da",
   majlisTableId: "majlis",
 };
 
