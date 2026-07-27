@@ -10,12 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MajlisCard from "../components/majlis-card";
-import {
-  categories,
-  distanceOptions,
-  dummyMajlisCard,
-  filters,
-} from "../constants/majlis";
+import { categories, distanceOptions, filters } from "../constants/majlis";
 import { useCurrentLocation } from "../hooks/useCurrentLocation";
 import type { Majlis } from "../types/majlis";
 import { calculateDistanceKm } from "../utils/distance";
@@ -40,13 +35,36 @@ export default function MajlisAlertScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(true);
 
-  const [filteredMajlis, setFilteredMajlis] = useState<Majlis[]>(
-    [...dummyMajlisCard].sort((a, b) => a.timeOrder - b.timeOrder),
-  );
+  const [filteredMajlis, setFilteredMajlis] = useState<Majlis[]>([]);
+  const [majlisList, setMajlisList] = useState<Majlis[]>([]);
+  const [appwriteLoading, setAppwriteLoading] = useState(false);
+  const [appwriteError, setAppwriteError] = useState("");
+
+  useEffect(() => {
+    const fetchMajlisData = async () => {
+      try {
+        setAppwriteLoading(true);
+        setAppwriteError("");
+
+        const rows = await getMajlisRows();
+
+        const sortedRows = sortMajlisFilters(rows, "Upcoming soonest first");
+
+        setMajlisList(sortedRows);
+        setFilteredMajlis(sortedRows);
+      } catch (error) {
+        setAppwriteError("Unable to load Majlis data. Please try again.");
+      } finally {
+        setAppwriteLoading(false);
+      }
+    };
+
+    fetchMajlisData();
+  }, []);
 
   const handleSubmit = () => {
     setIsLoading(true);
-    let results = dummyMajlisCard.map((item) => {
+    let results = majlisList.map((item) => {
       if (!userLocation) {
         return item;
       }
@@ -75,14 +93,6 @@ export default function MajlisAlertScreen() {
       setFilteredMajlis(results);
     }, 1500);
   };
-
-  useEffect(() => {
-    const testFetchMajlisRows = async () => {
-    const rows = await getMajlisRows();
-    console.log("Appwrite Majlis Rows:", rows);
-  };
-    testFetchMajlisRows();
-}, []);
 
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">
@@ -267,6 +277,33 @@ export default function MajlisAlertScreen() {
               </Text>
             </Pressable>
 
+            {appwriteLoading && (
+              <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
+                <Text className="text-[#023f38] font-semibold text-center">
+                  Loading Majlis data...
+                </Text>
+              </View>
+            )}
+
+            {!appwriteLoading && appwriteError !== "" && (
+              <View className="bg-white border border-red-300 rounded-xl p-4">
+                <Text className="text-red-600 font-semibold text-center">
+                  {appwriteError}
+                </Text>
+              </View>
+            )}
+
+            {!appwriteLoading &&
+              appwriteError === "" &&
+              showResults &&
+              filteredMajlis.length === 0 && (
+                <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
+                  <Text className="text-[#023f38] font-semibold text-center">
+                    No Majlis found for selected filters.
+                  </Text>
+                </View>
+              )}
+
             {showResults && (
               <View className="mt-6 w-full gap-4">
                 <Text className="text-xl font-semibold text-[#023f38] mb-3">
@@ -277,6 +314,8 @@ export default function MajlisAlertScreen() {
                     No Majlis found for this category.
                   </Text>
                 ) : (
+                  !appwriteLoading &&
+                  appwriteError === "" &&
                   filteredMajlis.map((item) => (
                     <MajlisCard
                       key={item.id}
