@@ -20,6 +20,7 @@ export const getMajlisRows = async (): Promise<Majlis[]> => {
       timeOrder: Number(row.timeOrder),
       latitude: Number(row.latitude),
       longitude: Number(row.longitude),
+      posterUrl: row.posterUrl ?? "",
     }));
     return majlisRows;
   } catch (error) {

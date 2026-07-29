@@ -6,15 +6,16 @@ import {
   ScrollView,
   Text,
   View,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MajlisAlertDetail() {
   const router = useRouter();
 
-  const { name, category, time, date, location, distance } =
+  const { name, category, time, date, location, distance, posterUrl} =
     useLocalSearchParams();
-
+  console.log("Poster URL:", posterUrl);
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">
       <ImageBackground
@@ -41,6 +42,14 @@ export default function MajlisAlertDetail() {
             <Text className="text-2xl font-bold text-[#023f38] text-center">
               {name}
             </Text>
+
+            {posterUrl && String(posterUrl) !== "" && (
+              <Image
+                source={{ uri: String(posterUrl) }}
+                resizeMode="cover"
+                className="w-full h-56 rounded-2xl mt-8"
+              />
+            )}
 
             <View className="bg-white rounded-2xl mt-10 overflow-hidden border border-gray-200 ">
               <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200">
