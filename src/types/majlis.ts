@@ -10,5 +10,5 @@ export type Majlis = {
   timeOrder: number;
   latitude: number;
   longitude: number;
-  posterUrl : string;
+  posterFileId : string;
 };

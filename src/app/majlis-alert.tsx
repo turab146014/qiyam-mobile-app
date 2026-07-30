@@ -330,7 +330,7 @@ export default function MajlisAlertScreen() {
                             date: item.date,
                             location: item.location,
                             distance: item.distance,
-                            posterUrl: item.posterUrl,
+                            posterFileId: item.posterFileId,
                           },
                         })
                       }

@@ -1,5 +1,5 @@
 import "react-native-url-polyfill/auto";
-import { Client, TablesDB } from "react-native-appwrite";
+import { Client, TablesDB, Storage } from "react-native-appwrite";
 
 export const appwriteConfig = {
   endpoint: "https://syd.cloud.appwrite.io/v1",
@@ -7,6 +7,7 @@ export const appwriteConfig = {
   platform: "com.fourteenlabs.qiyamapp",
   databaseId: "6a61f9b40035dfd0f2da",
   majlisTableId: "majlis",
+  posterBucketId: "6a6b33ca00359e40be95",
 };
 
 const client = new Client();
@@ -17,3 +18,4 @@ client
   .setPlatform(appwriteConfig.platform);
 
 export const tablesDB = new TablesDB(client);
+export const storage = new Storage(client);

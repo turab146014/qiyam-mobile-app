@@ -20,8 +20,9 @@ export const getMajlisRows = async (): Promise<Majlis[]> => {
       timeOrder: Number(row.timeOrder),
       latitude: Number(row.latitude),
       longitude: Number(row.longitude),
-      posterUrl: row.posterUrl ?? "",
+      posterFileId: row.posterFileId ?? "",
     }));
+
     return majlisRows;
   } catch (error) {
     console.log("Error fetching Majlis rows:", error);

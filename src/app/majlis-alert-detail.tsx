@@ -9,13 +9,24 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { appwriteConfig, storage } from "../services/appwrite";
 export default function MajlisAlertDetail() {
   const router = useRouter();
 
-  const { name, category, time, date, location, distance, posterUrl} =
+  const { name, category, time, date, location, distance, posterFileId } =
     useLocalSearchParams();
-  console.log("Poster URL:", posterUrl);
+  const posterImageUrl =
+    typeof posterFileId === "string" && posterFileId.trim() !== ""
+      ? String(
+          storage.getFileView({
+            bucketId: appwriteConfig.posterBucketId,
+            fileId: posterFileId,
+          }),
+        )
+      : "";
+
+  console.log("Poster File ID:", posterFileId);
+  console.log("Poster Image URL:", posterImageUrl);
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">
       <ImageBackground
@@ -43,11 +54,11 @@ export default function MajlisAlertDetail() {
               {name}
             </Text>
 
-            {posterUrl && String(posterUrl) !== "" && (
+            {posterImageUrl !== "" && (
               <Image
-                source={{ uri: String(posterUrl) }}
+                source={{ uri: posterImageUrl }}
                 resizeMode="cover"
-                className="w-full h-56 rounded-2xl mt-8"
+                className="w-full h-56 rounded-2xl mt-8 bg-gray-200"
               />
             )}
 
