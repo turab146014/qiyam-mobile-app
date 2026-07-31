@@ -14,6 +14,7 @@ export const getMajlisRows = async (): Promise<Majlis[]> => {
       category: row.category,
       time: row.time,
       date: row.date,
+      dateValue: row.dateValue ?? "",
       location: row.location,
       distance: "Calculating distance ...",
       distanceKm: 0,

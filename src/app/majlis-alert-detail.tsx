@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -9,24 +10,21 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { appwriteConfig, storage } from "../services/appwrite";
+import { appwriteConfig } from "../services/appwrite";
 export default function MajlisAlertDetail() {
   const router = useRouter();
 
   const { name, category, time, date, location, distance, posterFileId } =
     useLocalSearchParams();
-  const posterImageUrl =
+
+    const posterImageUrl =
     typeof posterFileId === "string" && posterFileId.trim() !== ""
-      ? String(
-          storage.getFileView({
-            bucketId: appwriteConfig.posterBucketId,
-            fileId: posterFileId,
-          }),
-        )
+      ? `${appwriteConfig.endpoint}/storage/buckets/${appwriteConfig.posterBucketId}/files/${posterFileId}/view?project=${appwriteConfig.projectId}`
       : "";
 
   console.log("Poster File ID:", posterFileId);
   console.log("Poster Image URL:", posterImageUrl);
+  
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">
       <ImageBackground

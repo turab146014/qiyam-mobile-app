@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 import { Majlis } from "../types/majlis";
+import { getMajlisDateLabel } from "../utils/dateLabel";
 
 type MajlisCardProps = {
   item: Majlis;
@@ -8,6 +9,7 @@ type MajlisCardProps = {
 };
 
 export default function MajlisCard({ item, onPress }: MajlisCardProps) {
+  const dateLabel = getMajlisDateLabel(item.dateValue, item.date);
   return (
     <Pressable
       onPress={onPress}
@@ -23,7 +25,7 @@ export default function MajlisCard({ item, onPress }: MajlisCardProps) {
         />
 
         <Text className="text-sm text-[#023f38] ml-2">
-          {item.time} • {item.date}
+          {dateLabel} • {item.time}
         </Text>
       </View>
 

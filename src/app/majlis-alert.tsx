@@ -17,6 +17,7 @@ import { calculateDistanceKm } from "../utils/distance";
 import { filterMajlisResults } from "../utils/filterMajlis";
 import { sortMajlisFilters } from "../utils/sortMajlis";
 import { getMajlisRows } from "../services/majlisService";
+import { getMajlisDateLabel } from "../utils/dateLabel";
 
 export default function MajlisAlertScreen() {
   const router = useRouter();
@@ -327,7 +328,7 @@ export default function MajlisAlertScreen() {
                             name: item.name,
                             category: item.category,
                             time: item.time,
-                            date: item.date,
+                            date: getMajlisDateLabel(item.dateValue, item.date),
                             location: item.location,
                             distance: item.distance,
                             posterFileId: item.posterFileId,

@@ -4,6 +4,7 @@ export type Majlis = {
   category: string;
   time: string;
   date: string;
+  dateValue : string;
   location: string;
   distance: string;
   distanceKm: number;
