@@ -19,6 +19,7 @@ export const useCurrentLocation = () => {
     if (status !== "granted") {
       setLocationError("Permission Denied");
       setLocationLoading(false);
+      return;
     }
 
     const location = await Location.getCurrentPositionAsync({});
