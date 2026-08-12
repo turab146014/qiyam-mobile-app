@@ -18,6 +18,7 @@ import { filterMajlisResults } from "../utils/filterMajlis";
 import { sortMajlisFilters } from "../utils/sortMajlis";
 import { getMajlisRows } from "../services/majlisService";
 import { getMajlisDateLabel } from "../utils/dateLabel";
+import MajlisMap from "../components/majlis-map";
 
 export default function MajlisAlertScreen() {
   const router = useRouter();
@@ -118,7 +119,7 @@ export default function MajlisAlertScreen() {
               </Text>
             </View>
           </View>
-
+          <MajlisMap />
           {locationLoading && (
             <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
               <Text className="text-[#023f38] font-semibold text-center">
