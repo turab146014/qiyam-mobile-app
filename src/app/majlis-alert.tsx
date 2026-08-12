@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLoaderData, useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import {
   ImageBackground,
@@ -119,7 +119,11 @@ export default function MajlisAlertScreen() {
               </Text>
             </View>
           </View>
-          <MajlisMap />
+          
+          {userLocation && (
+            <MajlisMap userLocation={userLocation}/>
+          )}
+
           {locationLoading && (
             <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
               <Text className="text-[#023f38] font-semibold text-center">

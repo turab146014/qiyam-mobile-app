@@ -1,17 +1,26 @@
 import MapView from "react-native-maps";
 
-const MajlisMap = () => {
+
+type MajlisMapProps = {
+  userLocation : {
+    latitude : number;
+    longitude : number;
+  };
+};
+
+
+const MajlisMap = ({userLocation} : MajlisMapProps) => {
   return(
     <MapView
       style={{
-        height: 250,
+        height: 280,
         width: "100%",
       }}
       initialRegion={{
-        latitude: 31.5204,
-        longitude: 74.3587,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
+        latitude : userLocation.latitude,
+        longitude : userLocation.longitude,
+        latitudeDelta : 0.05,
+        longitudeDelta : 0.05,
       }}
     />
   );
