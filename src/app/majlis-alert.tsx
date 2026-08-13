@@ -119,9 +119,13 @@ export default function MajlisAlertScreen() {
               </Text>
             </View>
           </View>
-          
+
           {userLocation && (
-            <MajlisMap userLocation={userLocation}/>
+            <MajlisMap
+              userLocation={userLocation}
+              selectedDistance={selectedDistance}
+              majlisList={filteredMajlis}
+              />
           )}
 
           {locationLoading && (
