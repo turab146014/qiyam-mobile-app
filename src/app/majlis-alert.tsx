@@ -96,6 +96,21 @@ export default function MajlisAlertScreen() {
     }, 1500);
   };
 
+  const handleMajlisPress = (item: Majlis) => {
+  router.push({
+    pathname: "/majlis-alert-detail",
+    params: {
+      name: item.name,
+      category: item.category,
+      time: item.time,
+      date: getMajlisDateLabel(item.dateValue, item.date),
+      location: item.location,
+      distance: item.distance,
+      posterFileId: item.posterFileId,
+    },
+  });
+};
+
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">
       <ImageBackground
@@ -125,6 +140,7 @@ export default function MajlisAlertScreen() {
               userLocation={userLocation}
               selectedDistance={selectedDistance}
               majlisList={filteredMajlis}
+              onMarkerPress={handleMajlisPress}
               />
           )}
 
@@ -331,18 +347,7 @@ export default function MajlisAlertScreen() {
                       key={item.id}
                       item={item}
                       onPress={() =>
-                        router.push({
-                          pathname: "/majlis-alert-detail",
-                          params: {
-                            name: item.name,
-                            category: item.category,
-                            time: item.time,
-                            date: getMajlisDateLabel(item.dateValue, item.date),
-                            location: item.location,
-                            distance: item.distance,
-                            posterFileId: item.posterFileId,
-                          },
-                        })
+                        handleMajlisPress(item)
                       }
                     />
                   ))

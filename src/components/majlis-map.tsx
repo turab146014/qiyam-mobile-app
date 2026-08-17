@@ -1,5 +1,7 @@
 import MapView, { Circle, Marker } from "react-native-maps";
 import { Majlis } from "../types/majlis";
+import { Ionicons } from "@expo/vector-icons";
+import { View } from "react-native";
 
 type MajlisMapProps = {
   userLocation: {
@@ -7,10 +9,16 @@ type MajlisMapProps = {
     longitude: number;
   };
   selectedDistance: number;
-  majlisList : Majlis[];
+  majlisList: Majlis[];
+  onMarkerPress : (majlis : Majlis) => void;
 };
 
-const MajlisMap = ({ userLocation, selectedDistance, majlisList }: MajlisMapProps) => {
+const MajlisMap = ({
+  userLocation,
+  selectedDistance,
+  majlisList,
+  onMarkerPress,
+}: MajlisMapProps) => {
   return (
     <MapView
       style={{
@@ -25,20 +33,6 @@ const MajlisMap = ({ userLocation, selectedDistance, majlisList }: MajlisMapProp
       }}
       showsUserLocation={true}
     >
-
-      {majlisList.map((majlis) => (
-        <Marker
-          key = {majlis.id}
-          coordinate={{
-            latitude: majlis.latitude,
-            longitude : majlis.longitude,
-          }}
-          title = {majlis.name}
-          pinColor= "red"
-
-        />
-      ))}
-      
       <Circle
         center={{
           latitude: userLocation.latitude,
@@ -49,6 +43,31 @@ const MajlisMap = ({ userLocation, selectedDistance, majlisList }: MajlisMapProp
         fillColor="rgba(0, 122, 255, 0.15)"
         strokeWidth={2}
       />
+
+      {majlisList.map((majlis) => (
+        <Marker
+          key={majlis.id}
+          coordinate={{
+            latitude: majlis.latitude,
+            longitude: majlis.longitude,
+          }}
+          title={majlis.name}
+          onPress={() => onMarkerPress(majlis)}
+        >
+          <View
+            style={{
+              height: 28,
+              width: 28,
+              borderRadius: 14,
+              backgroundColor: "#DC2626",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="location-sharp" size={18} color="white" />
+          </View>
+        </Marker>
+      ))}
     </MapView>
   );
 };
