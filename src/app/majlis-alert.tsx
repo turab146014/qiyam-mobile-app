@@ -7,6 +7,7 @@ import {
   ScrollView,
   Text,
   View,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MajlisCard from "../components/majlis-card";
@@ -41,6 +42,8 @@ export default function MajlisAlertScreen() {
   const [majlisList, setMajlisList] = useState<Majlis[]>([]);
   const [appwriteLoading, setAppwriteLoading] = useState(false);
   const [appwriteError, setAppwriteError] = useState("");
+
+  const [isFullMapVisible, setIsFullMapVisible] = useState(false);
 
   useEffect(() => {
     const fetchMajlisData = async () => {
@@ -97,19 +100,21 @@ export default function MajlisAlertScreen() {
   };
 
   const handleMajlisPress = (item: Majlis) => {
-  router.push({
-    pathname: "/majlis-alert-detail",
-    params: {
-      name: item.name,
-      category: item.category,
-      time: item.time,
-      date: getMajlisDateLabel(item.dateValue, item.date),
-      location: item.location,
-      distance: item.distance,
-      posterFileId: item.posterFileId,
-    },
-  });
-};
+    setIsFullMapVisible(false);
+
+    router.push({
+      pathname: "/majlis-alert-detail",
+      params: {
+        name: item.name,
+        category: item.category,
+        time: item.time,
+        date: getMajlisDateLabel(item.dateValue, item.date),
+        location: item.location,
+        distance: item.distance,
+        posterFileId: item.posterFileId,
+      },
+    });
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">
@@ -136,13 +141,56 @@ export default function MajlisAlertScreen() {
           </View>
 
           {userLocation && (
-            <MajlisMap
-              userLocation={userLocation}
-              selectedDistance={selectedDistance}
-              majlisList={filteredMajlis}
-              onMarkerPress={handleMajlisPress}
+            <View className="relative">
+              <MajlisMap
+                userLocation={userLocation}
+                selectedDistance={selectedDistance}
+                majlisList={filteredMajlis}
+                onMarkerPress={handleMajlisPress}
+                isFullScreen={false}
               />
+
+              <Pressable
+                onPress={() => setIsFullMapVisible(true)}
+                className="absolute bottom-4 right-4 bg-white rounded-full p-3"
+              >
+                <MaterialCommunityIcons
+                  name="fullscreen"
+                  size={26}
+                  color="#023f38"
+                />
+              </Pressable>
+            </View>
           )}
+
+          <Modal
+            visible={isFullMapVisible}
+            animationType="slide"
+            onRequestClose={() => setIsFullMapVisible(false)}
+          >
+            <View style = {{flex:1}}>
+              {userLocation && (
+                <MajlisMap
+                  userLocation={userLocation}
+                  selectedDistance={selectedDistance}
+                  majlisList={filteredMajlis}
+                  onMarkerPress={handleMajlisPress}
+                  isFullScreen={true}
+                />
+              )}
+
+              <Pressable
+                onPress={() => setIsFullMapVisible(false)}
+                className="absolute top-12 right-5 bg-white rounded-full p-3"
+              >
+                <MaterialCommunityIcons
+                  name="close"
+                  size={26}
+                  color="#023f38"
+                ></MaterialCommunityIcons>
+              </Pressable>
+            </View>
+          </Modal>
 
           {locationLoading && (
             <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
@@ -160,7 +208,7 @@ export default function MajlisAlertScreen() {
             </View>
           )}
 
-          <View className="bg-[#fdf9f4] rounded-3xl mt-16 p-6 gap-5 pb-10">
+          <View className="bg-[#fdf9f4] rounded-t-3xl p-6 gap-5 pb-10">
             <View>
               <Text className="text-xl font-semibold text-[#023f38] mb-3">
                 Category
@@ -346,9 +394,7 @@ export default function MajlisAlertScreen() {
                     <MajlisCard
                       key={item.id}
                       item={item}
-                      onPress={() =>
-                        handleMajlisPress(item)
-                      }
+                      onPress={() => handleMajlisPress(item)}
                     />
                   ))
                 )}
