@@ -1,34 +1,25 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useLoaderData, useRouter } from "expo-router";
-import { useState, useEffect } from "react";
-import {
-  ImageBackground,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-  Modal,
-} from "react-native";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MajlisCard from "../components/majlis-card";
+import MajlisMap from "../components/majlis-map";
 import { categories, distanceOptions, filters } from "../constants/majlis";
 import { useCurrentLocation } from "../hooks/useCurrentLocation";
+import { getMajlisRows } from "../services/majlisService";
 import type { Majlis } from "../types/majlis";
+import { getMajlisDateLabel } from "../utils/dateLabel";
 import { calculateDistanceKm } from "../utils/distance";
 import { filterMajlisResults } from "../utils/filterMajlis";
 import { sortMajlisFilters } from "../utils/sortMajlis";
-import { getMajlisRows } from "../services/majlisService";
-import { getMajlisDateLabel } from "../utils/dateLabel";
-import MajlisMap from "../components/majlis-map";
 
 export default function MajlisAlertScreen() {
   const router = useRouter();
   const { userLocation, locationLoading, locationError } = useCurrentLocation();
 
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedFilter, setSelectedFilter] = useState(
-    "Upcoming soonest first",
-  );
+  const [selectedFilter, setSelectedFilter] = useState("Soonest");
 
   const [selectedDistance, setSelectedDistance] = useState(5);
 
@@ -53,7 +44,7 @@ export default function MajlisAlertScreen() {
 
         const rows = await getMajlisRows();
 
-        const sortedRows = sortMajlisFilters(rows, "Upcoming soonest first");
+        const sortedRows = sortMajlisFilters(rows, "Soonest");
 
         setMajlisList(sortedRows);
         setFilteredMajlis(sortedRows);
@@ -84,7 +75,7 @@ export default function MajlisAlertScreen() {
       return {
         ...item,
         distanceKm: calculatedDistance,
-        distance: `${calculatedDistance.toFixed(1)} km from your current location`,
+        distance: `${calculatedDistance.toFixed(1)} km`,
       };
     });
 
@@ -117,100 +108,81 @@ export default function MajlisAlertScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#014037]">
-      <ImageBackground
-        source={require("../../assets/images/bg_image.png")}
-        resizeMode="cover"
-        className="flex-1"
+    <SafeAreaView className="flex-1">
+      <View className="absolute inset-0">
+        <MajlisMap
+          userLocation={userLocation}
+          selectedDistance={selectedDistance}
+          majlisList={filteredMajlis}
+          onMarkerPress={handleMajlisPress}
+          isFullScreen={true}
+        />
+
+        <Pressable
+          onPress={() => setIsFullMapVisible(true)}
+          className="absolute right-4 bg-white rounded-full p-3 shadow-md"
+          style={{ bottom: "58%" }}
+        >
+          <MaterialCommunityIcons name="fullscreen" size={26} color="#023f38" />
+        </Pressable>
+      </View>
+
+      <Modal
+        visible={isFullMapVisible}
+        animationType="slide"
+        onRequestClose={() => setIsFullMapVisible(false)}
       >
-        <ScrollView>
-          <View className="m-5 mt-6 flex-row items-center gap-20">
-            <Pressable onPress={() => router.back()}>
-              <MaterialCommunityIcons
-                name="arrow-left"
-                size={30}
-                color="#ffffff"
-              />
-            </Pressable>
-
-            <View>
-              <Text className="flex-1 font-semibold text-white text-2xl mr-8">
-                Majlis Alert
-              </Text>
-            </View>
-          </View>
-
+        <View style={{ flex: 1 }}>
           {userLocation && (
-            <View className="relative">
-              <MajlisMap
-                userLocation={userLocation}
-                selectedDistance={selectedDistance}
-                majlisList={filteredMajlis}
-                onMarkerPress={handleMajlisPress}
-                isFullScreen={false}
-              />
-
-              <Pressable
-                onPress={() => setIsFullMapVisible(true)}
-                className="absolute bottom-4 right-4 bg-white rounded-full p-3"
-              >
-                <MaterialCommunityIcons
-                  name="fullscreen"
-                  size={26}
-                  color="#023f38"
-                />
-              </Pressable>
-            </View>
+            <MajlisMap
+              userLocation={userLocation}
+              selectedDistance={selectedDistance}
+              majlisList={filteredMajlis}
+              onMarkerPress={handleMajlisPress}
+              isFullScreen={true}
+            />
           )}
 
-          <Modal
-            visible={isFullMapVisible}
-            animationType="slide"
-            onRequestClose={() => setIsFullMapVisible(false)}
+          <Pressable
+            onPress={() => setIsFullMapVisible(false)}
+            className="absolute top-12 right-5 bg-white rounded-full p-3"
           >
-            <View style = {{flex:1}}>
-              {userLocation && (
-                <MajlisMap
-                  userLocation={userLocation}
-                  selectedDistance={selectedDistance}
-                  majlisList={filteredMajlis}
-                  onMarkerPress={handleMajlisPress}
-                  isFullScreen={true}
-                />
-              )}
+            <MaterialCommunityIcons
+              name="close"
+              size={26}
+              color="#023f38"
+            ></MaterialCommunityIcons>
+          </Pressable>
+        </View>
+      </Modal>
 
-              <Pressable
-                onPress={() => setIsFullMapVisible(false)}
-                className="absolute top-12 right-5 bg-white rounded-full p-3"
-              >
-                <MaterialCommunityIcons
-                  name="close"
-                  size={26}
-                  color="#023f38"
-                ></MaterialCommunityIcons>
-              </Pressable>
-            </View>
-          </Modal>
+      <Pressable
+        className="absolute top-12 left-5 bg-white rounded-full p-3"
+        onPress={() => router.back()}
+      >
+        <MaterialCommunityIcons name="arrow-left" size={22} color="#023f38" />
+      </Pressable>
 
-          {locationLoading && (
-            <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
-              <Text className="text-[#023f38] font-semibold text-center">
-                Getting your current location...
-              </Text>
-            </View>
-          )}
+      {locationError !== "" && (
+        <View className="bg-white border border-red-300 rounded-xl p-4">
+          <Text className="text-red-600 font-semibold text-center">
+            {locationError}
+          </Text>
+        </View>
+      )}
 
-          {locationError !== "" && (
-            <View className="bg-white border border-red-300 rounded-xl p-4">
-              <Text className="text-red-600 font-semibold text-center">
-                {locationError}
-              </Text>
-            </View>
-          )}
-
-          <View className="bg-[#fdf9f4] rounded-t-3xl p-6 gap-5 pb-10">
-            <View>
-              <Text className="text-xl font-semibold text-[#023f38] mb-3">
+      <View className="absolute bottom-0 left-0 right-0 max-h-[55%] bg-[#fdf9f4] rounded-t-3xl">
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 20,
+            paddingBottom: 30,
+          }}
+        >
+          <View className="flex-row gap-3">
+            <View className="flex-1 minWidth: 0">
+              <Text className="text-base font-semibold text-[#023f38] mb-2">
                 Category
               </Text>
 
@@ -221,7 +193,7 @@ export default function MajlisAlertScreen() {
                 }}
                 className=" bg-white border border-[#d6a85c] rounded-xl px-4 py-3 flex-row items-center justify-between"
               >
-                <Text className="text-base text-[#023f38]">
+                <Text className="text-sm font-semibold text-[#023f38]">
                   {selectedCategory}
                 </Text>
 
@@ -243,7 +215,7 @@ export default function MajlisAlertScreen() {
                       }}
                       className="px-4 py-3 border-b border-gray-200"
                     >
-                      <Text className="font-semibold text-[#023f38] text-base">
+                      <Text className="font-semibold text-[#023f38] text-sm">
                         {category}
                       </Text>
                     </Pressable>
@@ -252,9 +224,9 @@ export default function MajlisAlertScreen() {
               )}
             </View>
 
-            <View>
-              <Text className="text-xl font-semibold text-[#023f38] mb-3">
-                Filter
+            <View className="flex-1 minWidth: 0">
+              <Text className="text-base font-semibold text-[#023f38] mb-2">
+                Sort
               </Text>
 
               <Pressable
@@ -264,7 +236,11 @@ export default function MajlisAlertScreen() {
                 }}
                 className=" bg-white border border-[#d6a85c] rounded-xl px-4 py-3 flex-row items-center justify-between"
               >
-                <Text className="text-base text-[#023f38]">
+                <Text
+                  className="text-sm text-[#023f38] font-semibold"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {selectedFilter}
                 </Text>
 
@@ -286,7 +262,7 @@ export default function MajlisAlertScreen() {
                       }}
                       className="px-4 py-3 border-b border-gray-200"
                     >
-                      <Text className="font-semibold text-[#023f38] text-base">
+                      <Text className="font-semibold text-[#023f38] text-sm">
                         {filter}
                       </Text>
                     </Pressable>
@@ -294,115 +270,103 @@ export default function MajlisAlertScreen() {
                 </View>
               )}
             </View>
+          </View>
 
-            <View className="flex-row items-center justify-between mt-5">
-              <Text className="text-xl font-semibold text-[#023f38]">
-                Distance
-              </Text>
+          <View className="flex-row items-center justify-between mt-5">
+            <Text className="text-base font-semibold text-[#023f38]">
+              Distance
+            </Text>
 
-              <Text className="text-lg font-medium text-[#023f38]">
-                {selectedDistance} km
-              </Text>
-            </View>
+            <Text className="text-base font-medium text-[#023f38]">
+              {selectedDistance} km
+            </Text>
+          </View>
 
-            <View className="h-1 bg-gray-300 rounded-full">
-              <View
-                className="h-1 bg-[#d6a85c] rounded-full"
-                style={{ width: `${(selectedDistance / 20) * 100}%` }}
-              />
-            </View>
-
-            <View className="flex-row items-center justify-between">
-              <Text className="text-sm text-[#023f38]">0 km</Text>
-              <Text className="text-sm text-[#023f38]">20 km</Text>
-            </View>
-
-            <View className="flex-row items-center justify-between mt-4">
-              {distanceOptions.map((distance) => (
-                <Pressable
-                  key={distance}
-                  onPress={() => setSelectedDistance(distance)}
-                  className={`px-3 py-2 rounded-full border ${
+          <View className="flex-row items-center justify-between mt-4">
+            {distanceOptions.map((distance) => (
+              <Pressable
+                key={distance}
+                onPress={() => setSelectedDistance(distance)}
+                className={`px-3 py-2 rounded-full border ${
+                  selectedDistance === distance
+                    ? "bg-[#025e44] border-[#025e44]"
+                    : "bg-white border-[#d6a85c]"
+                }`}
+              >
+                <Text
+                  className={`text-sm ${
                     selectedDistance === distance
-                      ? "bg-[#025e44] border-[#025e44]"
-                      : "bg-white border-[#d6a85c]"
+                      ? "text-white"
+                      : "text-[#023f38]"
                   }`}
                 >
-                  <Text
-                    className={`text-sm font-semibold ${
-                      selectedDistance === distance
-                        ? "text-white"
-                        : "text-[#023f38]"
-                    }`}
-                  >
-                    {distance} km
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+                  {distance} km
+                </Text>
+              </Pressable>
+            ))}
+          </View>
 
-            <Pressable
-              disabled={isLoading}
-              onPress={handleSubmit}
-              className="bg-[#025e44] rounded-xl py-4 px-4 flex-row items-center justify-center mt-10"
-            >
-              <Text className="text-white text-base font-bold ml-2">
-                {isLoading ? "Searching..." : "Submit"}{" "}
+          <Pressable
+            disabled={isLoading}
+            onPress={handleSubmit}
+            className="bg-[#025e44] rounded-xl py-4 px-4 flex-row items-center justify-center mt-10"
+          >
+            <Text className="text-white text-base font-bold ml-2">
+              {isLoading ? "Searching..." : "Submit"}{" "}
+            </Text>
+          </Pressable>
+
+          {appwriteLoading && (
+            <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
+              <Text className="text-[#023f38] font-semibold text-center">
+                Loading Majlis data...
               </Text>
-            </Pressable>
+            </View>
+          )}
 
-            {appwriteLoading && (
+          {!appwriteLoading && appwriteError !== "" && (
+            <View className="bg-white border border-red-300 rounded-xl p-4">
+              <Text className="text-red-600 font-semibold text-center">
+                {appwriteError}
+              </Text>
+            </View>
+          )}
+
+          {!appwriteLoading &&
+            appwriteError === "" &&
+            showResults &&
+            filteredMajlis.length === 0 && (
               <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
                 <Text className="text-[#023f38] font-semibold text-center">
-                  Loading Majlis data...
+                  No Majlis found for selected filters.
                 </Text>
               </View>
             )}
 
-            {!appwriteLoading && appwriteError !== "" && (
-              <View className="bg-white border border-red-300 rounded-xl p-4">
-                <Text className="text-red-600 font-semibold text-center">
-                  {appwriteError}
+          {showResults && (
+            <View className="mt-6 w-full gap-4">
+              <Text className="text-lg font-semibold text-[#023f38] mb-3">
+                Nearby Majlis
+              </Text>
+              {filteredMajlis.length === 0 ? (
+                <Text className="text-center text-[#023f38] mt-4">
+                  No Majlis found for this category.
                 </Text>
-              </View>
-            )}
-
-            {!appwriteLoading &&
-              appwriteError === "" &&
-              showResults &&
-              filteredMajlis.length === 0 && (
-                <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
-                  <Text className="text-[#023f38] font-semibold text-center">
-                    No Majlis found for selected filters.
-                  </Text>
-                </View>
+              ) : (
+                !appwriteLoading &&
+                appwriteError === "" &&
+                filteredMajlis.map((item) => (
+                  <MajlisCard
+                    key={item.id}
+                    item={item}
+                    onPress={() => handleMajlisPress(item)}
+                  />
+                ))
               )}
-
-            {showResults && (
-              <View className="mt-6 w-full gap-4">
-                <Text className="text-xl font-semibold text-[#023f38] mb-3">
-                  Nearby Majlis
-                </Text>
-                {filteredMajlis.length === 0 ? (
-                  <Text className="text-center text-[#023f38] mt-4">
-                    No Majlis found for this category.
-                  </Text>
-                ) : (
-                  !appwriteLoading &&
-                  appwriteError === "" &&
-                  filteredMajlis.map((item) => (
-                    <MajlisCard
-                      key={item.id}
-                      item={item}
-                      onPress={() => handleMajlisPress(item)}
-                    />
-                  ))
-                )}
-              </View>
-            )}
-          </View>
+            </View>
+          )}
         </ScrollView>
-      </ImageBackground>
+      </View>
     </SafeAreaView>
   );
 }

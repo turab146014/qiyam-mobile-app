@@ -8,9 +8,9 @@ export const categories = [
 ];
 
 export const filters = [
-  "Upcoming soonest first",
-  "Oldest first",
-  "Nearest distance first",
+  "Soonest",
+  "Oldest",
+  "Nearest",
 ];
 
 export const distanceOptions = [5, 10, 15, 20];

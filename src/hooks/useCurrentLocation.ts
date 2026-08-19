@@ -22,7 +22,21 @@ export const useCurrentLocation = () => {
       return;
     }
 
-    const location = await Location.getCurrentPositionAsync({});
+    const lastLocation = await Location.getLastKnownPositionAsync({
+      maxAge: 6000,
+      requiredAccuracy: 100,
+    });
+
+    if (lastLocation) {
+      setUserLocation({
+        latitude: lastLocation.coords.latitude,
+        longitude: lastLocation.coords.longitude,
+      });
+    }
+
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
 
     setUserLocation({
       latitude: location.coords.latitude,

@@ -15,7 +15,7 @@ export default function MajlisAlertDetail() {
   const router = useRouter();
 
   const { height } = useWindowDimensions();
-  const posterHeight = height * 0.45;
+  const posterHeight = height * 0.52;
 
   const { name, category, time, date, location, distance, posterFileId } =
     useLocalSearchParams();
@@ -27,28 +27,28 @@ export default function MajlisAlertDetail() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">
-      <ImageBackground
-        source={{ uri: posterImageUrl }}
-        resizeMode="contain"
+      <View
+        className="bg-black relative justify-center"
         style={{ height: posterHeight }}
-        className="bg-black"
       >
-        <View className="absolute inset-0 bg-black/20" />
+        <ImageBackground
+          source={{ uri: posterImageUrl }}
+          resizeMode="contain"
+          className="flex-1 mx-5 my-3 overflow-hidden rounded-2xl"
+          imageStyle={{ borderRadius: 16 }}
+        />
 
-        <View className="m-5 mt-6 flex-row items-center">
-          <Pressable onPress={() => router.back()}>
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={30}
-              color="#ffffff"
-            />
-          </Pressable>
-        </View>
-      </ImageBackground>
+        <Pressable
+          onPress={() => router.back()}
+          className="absolute top-5 left-5 bg-white rounded-full p-3"
+        >
+          <MaterialCommunityIcons name="arrow-left" size={22} color="#023f38" />
+        </Pressable>
+      </View>
 
       <View className="flex-1 bg-[#fdf9f4] rounded-t-3xl -mt-6 px-5 pt-7">
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Text className="text-2xl font-bold text-[#023f38] text-center leading-8 px-2">
+          <Text className="text-xl font-extrabold text-[#023f38] text-center leading-8 px-2">
             {String(name)}
           </Text>
 
@@ -66,7 +66,7 @@ export default function MajlisAlertDetail() {
                 </Text>
               </View>
 
-              <Text className="text-[#023f38] font-bold text-right text-base">
+              <Text className="text-[#023f38] font-bold text-right text-sm">
                 {String(category)}
               </Text>
             </View>
@@ -84,7 +84,7 @@ export default function MajlisAlertDetail() {
                 </Text>
               </View>
 
-              <Text className="text-[#023f38] font-bold text-right text-base">
+              <Text className="text-[#023f38] font-bold text-right text-sm">
                 {String(time)}
               </Text>
             </View>
@@ -102,7 +102,7 @@ export default function MajlisAlertDetail() {
                 </Text>
               </View>
 
-              <Text className="text-[#023f38] font-bold text-right text-base">
+              <Text className="text-[#023f38] font-bold text-right text-sm">
                 {String(date)}
               </Text>
             </View>
@@ -120,7 +120,7 @@ export default function MajlisAlertDetail() {
                 </Text>
               </View>
 
-              <Text className="text-[#023f38] font-bold text-right text-base flex-1 ml-4 leading-6">
+              <Text className="text-[#023f38] font-bold text-right text-sm flex-1 ml-4 leading-6">
                 {String(location)}
               </Text>
             </View>
@@ -138,7 +138,7 @@ export default function MajlisAlertDetail() {
                 </Text>
               </View>
 
-              <Text className="text-[#023f38] font-bold text-right text-base flex-1 ml-4 leading-6">
+              <Text className="text-[#023f38] font-bold text-right text-sm flex-1 ml-4 leading-6">
                 {String(distance)}
               </Text>
             </View>

@@ -1,8 +1,4 @@
-import MapView, {
-  Circle,
-  Marker,
-  Callout,
-} from "react-native-maps";
+import MapView, { Circle, Marker, Callout } from "react-native-maps";
 import { Majlis } from "../types/majlis";
 import { Ionicons } from "@expo/vector-icons";
 import { View, Text } from "react-native";
@@ -11,11 +7,18 @@ type MajlisMapProps = {
   userLocation: {
     latitude: number;
     longitude: number;
-  };
+  } | null;
   selectedDistance: number;
   majlisList: Majlis[];
   onMarkerPress: (majlis: Majlis) => void;
   isFullScreen?: Boolean;
+};
+
+const defaultRegion = {
+  latitude: 31.5204,
+  longitude: 74.3587,
+  latitudeDelta: 0.1,
+  longitudeDelta: 0.1,
 };
 
 const MajlisMap = ({
@@ -37,24 +40,30 @@ const MajlisMap = ({
               width: "100%",
             }
       }
-      initialRegion={{
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      }}
+      initialRegion={
+        userLocation
+          ? {
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            }
+          : defaultRegion
+      }
       showsUserLocation={true}
     >
-      <Circle
-        center={{
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude,
-        }}
-        radius={selectedDistance * 1000}
-        strokeColor="rgba(0, 122, 255, 0.8)"
-        fillColor="rgba(0, 122, 255, 0.15)"
-        strokeWidth={2}
-      />
+      {userLocation && (
+        <Circle
+          center={{
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+          }}
+          radius={selectedDistance * 1000}
+          strokeColor="rgba(0, 122, 255, 0.8)"
+          fillColor="rgba(0, 122, 255, 0.15)"
+          strokeWidth={2}
+        />
+      )}
 
       {majlisList.map((majlis) => (
         <Marker

@@ -15,7 +15,7 @@ export default function MajlisCard({ item, onPress }: MajlisCardProps) {
       onPress={onPress}
       className="w-full bg-white border border-[#d6a85c] rounded-xl p-4 mb-4"
     >
-      <Text className="text-lg font-bold text-[#023f38]">{item.name}</Text>
+      <Text className="text-base font-bold text-[#023f38]">{item.name}</Text>
 
       <View className="flex-row items-center mt-3">
         <MaterialCommunityIcons
