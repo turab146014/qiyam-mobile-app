@@ -16,17 +16,15 @@ import { sortMajlisFilters } from "../utils/sortMajlis";
 
 export default function MajlisAlertScreen() {
   const router = useRouter();
-  const { userLocation, locationLoading, locationError } = useCurrentLocation();
+  const { userLocation, locationError } = useCurrentLocation();
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedFilter, setSelectedFilter] = useState("Soonest");
-
   const [selectedDistance, setSelectedDistance] = useState(5);
 
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(true);
 
   const [filteredMajlis, setFilteredMajlis] = useState<Majlis[]>([]);
@@ -58,8 +56,7 @@ export default function MajlisAlertScreen() {
     fetchMajlisData();
   }, []);
 
-  const handleSubmit = () => {
-    setIsLoading(true);
+  useEffect(() => {
     let results = majlisList.map((item) => {
       if (!userLocation) {
         return item;
@@ -83,12 +80,14 @@ export default function MajlisAlertScreen() {
 
     results = sortMajlisFilters(results, selectedFilter);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      setShowResults(true);
-      setFilteredMajlis(results);
-    }, 1500);
-  };
+    setFilteredMajlis(results);
+  }, [
+    majlisList,
+    userLocation,
+    selectedCategory,
+    selectedDistance,
+    selectedFilter,
+  ]);
 
   const handleMajlisPress = (item: Majlis) => {
     setIsFullMapVisible(false);
@@ -121,7 +120,7 @@ export default function MajlisAlertScreen() {
         <Pressable
           onPress={() => setIsFullMapVisible(true)}
           className="absolute right-4 bg-white rounded-full p-3 shadow-md"
-          style={{ bottom: "58%" }}
+          style={{ bottom: "50%" }}
         >
           <MaterialCommunityIcons name="fullscreen" size={26} color="#023f38" />
         </Pressable>
@@ -147,11 +146,7 @@ export default function MajlisAlertScreen() {
             onPress={() => setIsFullMapVisible(false)}
             className="absolute top-12 right-5 bg-white rounded-full p-3"
           >
-            <MaterialCommunityIcons
-              name="close"
-              size={26}
-              color="#023f38"
-            ></MaterialCommunityIcons>
+            <MaterialCommunityIcons name="close" size={26} color="#023f38" />
           </Pressable>
         </View>
       </Modal>
@@ -171,105 +166,135 @@ export default function MajlisAlertScreen() {
         </View>
       )}
 
-      <View className="absolute bottom-0 left-0 right-0 max-h-[55%] bg-[#fdf9f4] rounded-t-3xl">
+      <View className="absolute bottom-0 left-0 right-0 max-h-[47%] bg-[#fdf9f4] rounded-t-3xl pt-4">
         <ScrollView
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingTop: 20,
             paddingBottom: 30,
           }}
         >
-          <View className="flex-row gap-3">
-            <View className="flex-1 minWidth: 0">
-              <Text className="text-base font-semibold text-[#023f38] mb-2">
-                Category
-              </Text>
-
-              <Pressable
-                onPress={() => {
-                  setShowCategoryDropdown(!showCategoryDropdown);
-                  setShowFilterDropdown(false);
-                }}
-                className=" bg-white border border-[#d6a85c] rounded-xl px-4 py-3 flex-row items-center justify-between"
-              >
-                <Text className="text-sm font-semibold text-[#023f38]">
-                  {selectedCategory}
+          <View className="relative" style={{ zIndex: 50 }}>
+            <View className="flex-row gap-3">
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text className="text-base font-semibold text-[#023f38] mb-2">
+                  Category
                 </Text>
+              </View>
 
-                <MaterialCommunityIcons
-                  name={showCategoryDropdown ? "chevron-up" : "chevron-down"}
-                  size={24}
-                  color="#023f38"
-                />
-              </Pressable>
-
-              {showCategoryDropdown && (
-                <View className="bg-white border border-[#d6a85c] rounded-xl mt-2 overflow-hidden">
-                  {categories.map((category) => (
-                    <Pressable
-                      key={category}
-                      onPress={() => {
-                        setSelectedCategory(category);
-                        setShowCategoryDropdown(false);
-                      }}
-                      className="px-4 py-3 border-b border-gray-200"
-                    >
-                      <Text className="font-semibold text-[#023f38] text-sm">
-                        {category}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              )}
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text className="text-base font-semibold text-[#023f38] mb-2">
+                  Sort
+                </Text>
+              </View>
             </View>
 
-            <View className="flex-1 minWidth: 0">
-              <Text className="text-base font-semibold text-[#023f38] mb-2">
-                Sort
-              </Text>
-
-              <Pressable
-                onPress={() => {
-                  setShowFilterDropdown(!showFilterDropdown);
-                  setShowCategoryDropdown(false);
-                }}
-                className=" bg-white border border-[#d6a85c] rounded-xl px-4 py-3 flex-row items-center justify-between"
-              >
-                <Text
-                  className="text-sm text-[#023f38] font-semibold"
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
+            <View className="flex-row gap-3">
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Pressable
+                  onPress={() => {
+                    setShowCategoryDropdown(!showCategoryDropdown);
+                    setShowFilterDropdown(false);
+                  }}
+                  className="bg-white border border-[#d6a85c] rounded-xl px-4 py-3 flex-row items-center justify-between"
                 >
-                  {selectedFilter}
-                </Text>
+                  <Text
+                    className="text-sm font-semibold text-[#023f38] flex-1"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {selectedCategory}
+                  </Text>
 
-                <MaterialCommunityIcons
-                  name={showFilterDropdown ? "chevron-up" : "chevron-down"}
-                  size={24}
-                  color="#023f38"
-                />
-              </Pressable>
+                  <MaterialCommunityIcons
+                    name={showCategoryDropdown ? "chevron-up" : "chevron-down"}
+                    size={24}
+                    color="#023f38"
+                  />
+                </Pressable>
+              </View>
 
-              {showFilterDropdown && (
-                <View className="bg-white border border-[#d6a85c] rounded-xl mt-2 overflow-hidden">
-                  {filters.map((filter) => (
-                    <Pressable
-                      key={filter}
-                      onPress={() => {
-                        setSelectedFilter(filter);
-                        setShowFilterDropdown(false);
-                      }}
-                      className="px-4 py-3 border-b border-gray-200"
-                    >
-                      <Text className="font-semibold text-[#023f38] text-sm">
-                        {filter}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              )}
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Pressable
+                  onPress={() => {
+                    setShowFilterDropdown(!showFilterDropdown);
+                    setShowCategoryDropdown(false);
+                  }}
+                  className="bg-white border border-[#d6a85c] rounded-xl px-4 py-3 flex-row items-center justify-between"
+                >
+                  <Text
+                    className="text-sm font-semibold text-[#023f38] flex-1"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {selectedFilter}
+                  </Text>
+
+                  <MaterialCommunityIcons
+                    name={showFilterDropdown ? "chevron-up" : "chevron-down"}
+                    size={24}
+                    color="#023f38"
+                  />
+                </Pressable>
+              </View>
             </View>
+
+            {showCategoryDropdown && (
+              <View
+                className="absolute left-0 bg-white border border-[#d6a85c] rounded-xl overflow-hidden"
+                style={{
+                  top: "100%",
+                  width: "48%",
+                  marginTop: 6,
+                  zIndex: 100,
+                  elevation: 20,
+                }}
+              >
+                {categories.map((category) => (
+                  <Pressable
+                    key={category}
+                    onPress={() => {
+                      setSelectedCategory(category);
+                      setShowCategoryDropdown(false);
+                    }}
+                    className="px-4 py-3 border-b border-gray-200"
+                  >
+                    <Text className="font-semibold text-[#023f38] text-sm">
+                      {category}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+
+            {showFilterDropdown && (
+              <View
+                className="absolute right-0 bg-white border border-[#d6a85c] rounded-xl overflow-hidden"
+                style={{
+                  top: "100%",
+                  width: "48%",
+                  marginTop: 6,
+                  zIndex: 100,
+                  elevation: 20,
+                }}
+              >
+                {filters.map((filter) => (
+                  <Pressable
+                    key={filter}
+                    onPress={() => {
+                      setSelectedFilter(filter);
+                      setShowFilterDropdown(false);
+                    }}
+                    className="px-4 py-3 border-b border-gray-200"
+                  >
+                    <Text className="font-semibold text-[#023f38] text-sm">
+                      {filter}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </View>
 
           <View className="flex-row items-center justify-between mt-5">
@@ -287,7 +312,7 @@ export default function MajlisAlertScreen() {
               <Pressable
                 key={distance}
                 onPress={() => setSelectedDistance(distance)}
-                className={`px-3 py-2 rounded-full border ${
+                className={`px-6 py-3 rounded-full border ${
                   selectedDistance === distance
                     ? "bg-[#025e44] border-[#025e44]"
                     : "bg-white border-[#d6a85c]"
@@ -306,16 +331,6 @@ export default function MajlisAlertScreen() {
             ))}
           </View>
 
-          <Pressable
-            disabled={isLoading}
-            onPress={handleSubmit}
-            className="bg-[#025e44] rounded-xl py-4 px-4 flex-row items-center justify-center mt-10"
-          >
-            <Text className="text-white text-base font-bold ml-2">
-              {isLoading ? "Searching..." : "Submit"}{" "}
-            </Text>
-          </Pressable>
-
           {appwriteLoading && (
             <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
               <Text className="text-[#023f38] font-semibold text-center">
@@ -332,22 +347,12 @@ export default function MajlisAlertScreen() {
             </View>
           )}
 
-          {!appwriteLoading &&
-            appwriteError === "" &&
-            showResults &&
-            filteredMajlis.length === 0 && (
-              <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
-                <Text className="text-[#023f38] font-semibold text-center">
-                  No Majlis found for selected filters.
-                </Text>
-              </View>
-            )}
-
           {showResults && (
             <View className="mt-6 w-full gap-4">
               <Text className="text-lg font-semibold text-[#023f38] mb-3">
                 Nearby Majlis
               </Text>
+
               {filteredMajlis.length === 0 ? (
                 <Text className="text-center text-[#023f38] mt-4">
                   No Majlis found for this category.
