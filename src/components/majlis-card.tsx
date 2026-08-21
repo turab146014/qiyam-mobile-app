@@ -36,7 +36,11 @@ export default function MajlisCard({ item, onPress }: MajlisCardProps) {
           color="#023f38"
         />
 
-        <Text className="text-sm text-[#023f38] ml-2 flex-1">
+        <Text
+          className="text-sm text-[#023f38] ml-2 flex-1"
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {item.location}
         </Text>
       </View>

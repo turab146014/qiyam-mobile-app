@@ -4,15 +4,15 @@ export const sortMajlisFilters = (
   majlisList: Majlis[],
   selectedFilter: string,
 ) => {
-  if (selectedFilter == "Upcoming soonest first") {
+  if (selectedFilter == "Soonest") {
     return [...majlisList].sort((a, b) => a.timeOrder - b.timeOrder);
   }
 
-  if (selectedFilter == "Oldest first") {
+  if (selectedFilter == "Oldest") {
     return [...majlisList].sort((a, b) => b.timeOrder - a.timeOrder);
   }
 
-  if (selectedFilter == "Nearest distance first") {
+  if (selectedFilter == "Nearest") {
     return [...majlisList].sort((a, b) => a.distanceKm - b.distanceKm);
   }
 
