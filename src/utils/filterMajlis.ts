@@ -1,4 +1,4 @@
-import { Majlis } from "../types/majlis";
+import type { Majlis } from "../types/majlis";
 
 export const filterMajlisResults = (
   majlisList: Majlis[],
@@ -12,6 +12,5 @@ export const filterMajlisResults = (
   }
 
   results = results.filter((item) => item.distanceKm <= selectedDistance);
-
   return results;
 };

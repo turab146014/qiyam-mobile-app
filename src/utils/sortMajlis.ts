@@ -1,4 +1,4 @@
-import { Majlis } from "../types/majlis";
+import type { Majlis } from "../types/majlis";
 
 export const sortMajlisFilters = (
   majlisList: Majlis[],

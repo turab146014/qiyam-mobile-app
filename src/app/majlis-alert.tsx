@@ -25,8 +25,6 @@ export default function MajlisAlertScreen() {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
-  const [showResults, setShowResults] = useState(true);
-
   const [filteredMajlis, setFilteredMajlis] = useState<Majlis[]>([]);
   const [majlisList, setMajlisList] = useState<Majlis[]>([]);
   const [appwriteLoading, setAppwriteLoading] = useState(false);
@@ -42,10 +40,7 @@ export default function MajlisAlertScreen() {
 
         const rows = await getMajlisRows();
 
-        const sortedRows = sortMajlisFilters(rows, "Soonest");
-
-        setMajlisList(sortedRows);
-        setFilteredMajlis(sortedRows);
+        setMajlisList(rows);
       } catch (error) {
         setAppwriteError("Unable to load Majlis data. Please try again.");
       } finally {
@@ -57,11 +52,12 @@ export default function MajlisAlertScreen() {
   }, []);
 
   useEffect(() => {
-    let results = majlisList.map((item) => {
-      if (!userLocation) {
-        return item;
-      }
+    if (!userLocation) {
+      setFilteredMajlis([]);
+      return;
+    }
 
+    let results = majlisList.map((item) => {
       const calculatedDistance = calculateDistanceKm(
         userLocation.latitude,
         userLocation.longitude,
@@ -132,15 +128,13 @@ export default function MajlisAlertScreen() {
         onRequestClose={() => setIsFullMapVisible(false)}
       >
         <View style={{ flex: 1 }}>
-          {userLocation && (
-            <MajlisMap
-              userLocation={userLocation}
-              selectedDistance={selectedDistance}
-              majlisList={filteredMajlis}
-              onMarkerPress={handleMajlisPress}
-              isFullScreen={true}
-            />
-          )}
+          <MajlisMap
+            userLocation={userLocation}
+            selectedDistance={selectedDistance}
+            majlisList={filteredMajlis}
+            onMarkerPress={handleMajlisPress}
+            isFullScreen={true}
+          />
 
           <Pressable
             onPress={() => setIsFullMapVisible(false)}
@@ -168,7 +162,6 @@ export default function MajlisAlertScreen() {
 
       <View className="absolute bottom-0 left-0 right-0 max-h-[47%] bg-[#fdf9f4] rounded-t-3xl pt-4">
         <ScrollView
-          showsVerticalScrollIndicator={true}
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingTop: 20,
@@ -347,29 +340,27 @@ export default function MajlisAlertScreen() {
             </View>
           )}
 
-          {showResults && (
-            <View className="mt-6 w-full gap-4">
-              <Text className="text-lg font-semibold text-[#023f38] mb-3">
-                Nearby Majlis
-              </Text>
+          <View className="mt-6 w-full gap-4">
+            <Text className="text-lg font-semibold text-[#023f38] mb-3">
+              Nearby Majlis
+            </Text>
 
-              {filteredMajlis.length === 0 ? (
-                <Text className="text-center text-[#023f38] mt-4">
-                  No Majlis found for this category.
-                </Text>
-              ) : (
-                !appwriteLoading &&
-                appwriteError === "" &&
-                filteredMajlis.map((item) => (
-                  <MajlisCard
-                    key={item.id}
-                    item={item}
-                    onPress={() => handleMajlisPress(item)}
-                  />
-                ))
-              )}
-            </View>
-          )}
+            {filteredMajlis.length === 0 ? (
+              <Text className="text-center text-[#023f38] mt-4">
+                No Majlis found for this category.
+              </Text>
+            ) : (
+              !appwriteLoading &&
+              appwriteError === "" &&
+              filteredMajlis.map((item) => (
+                <MajlisCard
+                  key={item.id}
+                  item={item}
+                  onPress={() => handleMajlisPress(item)}
+                />
+              ))
+            )}
+          </View>
         </ScrollView>
       </View>
     </SafeAreaView>

@@ -1,5 +1,5 @@
 import MapView, { Circle, Marker, Callout, Region } from "react-native-maps";
-import { Majlis } from "../types/majlis";
+import type { Majlis } from "../types/majlis";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View, Text } from "react-native";
 import { useRef, useState } from "react";
@@ -12,9 +12,19 @@ type MajlisMapProps = {
   selectedDistance: number;
   majlisList: Majlis[];
   onMarkerPress: (majlis: Majlis) => void;
-  isFullScreen?: Boolean;
+  isFullScreen?: boolean;
 };
-
+const mapStyle = [
+  {
+    featureType: "poi",
+    elementType: "labels",
+    stylers: [
+      {
+        visibility: "off",
+      },
+    ],
+  },
+];
 const defaultRegion = {
   latitude: 31.5204,
   longitude: 74.3587,
@@ -66,12 +76,14 @@ const MajlisMap = ({
               }
             : defaultRegion
         }
+        customMapStyle={mapStyle}
+        poiClickEnabled={false}
         showsUserLocation={true}
         showsMyLocationButton={false}
         showsCompass={false}
-        toolbarEnabled={false}
+        toolbarEnabled={true}
         zoomControlEnabled={false}
-        moveOnMarkerPress={false}
+        moveOnMarkerPress={true}
         ref={mapRef}
         onRegionChangeComplete={(region) => {
           setCurrentRegion(region);

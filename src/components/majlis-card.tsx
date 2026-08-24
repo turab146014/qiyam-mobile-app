@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
-import { Majlis } from "../types/majlis";
+import type { Majlis } from "../types/majlis";
 import { getMajlisDateLabel } from "../utils/dateLabel";
 
 type MajlisCardProps = {
