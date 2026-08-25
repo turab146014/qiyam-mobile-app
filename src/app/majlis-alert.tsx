@@ -134,6 +134,7 @@ export default function MajlisAlertScreen() {
             majlisList={filteredMajlis}
             onMarkerPress={handleMajlisPress}
             isFullScreen={true}
+            isModalMap={true}
           />
 
           <Pressable
@@ -145,13 +146,6 @@ export default function MajlisAlertScreen() {
         </View>
       </Modal>
 
-      <Pressable
-        className="absolute top-12 left-5 bg-white rounded-full p-3"
-        onPress={() => router.back()}
-      >
-        <MaterialCommunityIcons name="arrow-left" size={22} color="#023f38" />
-      </Pressable>
-
       {locationError !== "" && (
         <View className="bg-white border border-red-300 rounded-xl p-4">
           <Text className="text-red-600 font-semibold text-center">
@@ -160,7 +154,10 @@ export default function MajlisAlertScreen() {
         </View>
       )}
 
-      <View className="absolute bottom-0 left-0 right-0 max-h-[47%] bg-[#fdf9f4] rounded-t-3xl pt-4">
+      <View
+        className="absolute bottom-0 left-0 right-0 bg-[#fdf9f4] rounded-t-3xl pt-4"
+        style={{ height: "47%" }}
+      >
         <ScrollView
           contentContainerStyle={{
             paddingHorizontal: 16,

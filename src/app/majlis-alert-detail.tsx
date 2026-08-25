@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
+  Image,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -17,8 +18,15 @@ export default function MajlisAlertDetail() {
   const { height } = useWindowDimensions();
   const posterHeight = height * 0.52;
 
-  const { name, category, time, date, location, distance, posterFileId } =
-    useLocalSearchParams();
+  const {
+    name,
+    category,
+    time,
+    date,
+    location,
+    distance,
+    posterFileId,
+  } = useLocalSearchParams();
 
   const posterImageUrl =
     typeof posterFileId === "string" && posterFileId.trim() !== ""
@@ -28,22 +36,26 @@ export default function MajlisAlertDetail() {
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">
       <View
-        className="bg-black relative justify-center"
+        className="relative justify-center overflow-hidden"
         style={{ height: posterHeight }}
       >
+        <Image
+          source={{ uri: posterImageUrl }}
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+          }}
+          resizeMode="cover"
+          blurRadius={20}
+        />
+
         <ImageBackground
           source={{ uri: posterImageUrl }}
           resizeMode="contain"
           className="flex-1 mx-5 my-3 overflow-hidden rounded-2xl"
           imageStyle={{ borderRadius: 16 }}
         />
-
-        <Pressable
-          onPress={() => router.back()}
-          className="absolute top-5 left-5 bg-white rounded-full p-3"
-        >
-          <MaterialCommunityIcons name="arrow-left" size={22} color="#023f38" />
-        </Pressable>
       </View>
 
       <View className="flex-1 bg-[#fdf9f4] rounded-t-3xl -mt-6 px-5 pt-7">
@@ -53,7 +65,7 @@ export default function MajlisAlertDetail() {
           </Text>
 
           <View className="bg-white rounded-2xl mt-7 overflow-hidden border border-gray-200">
-            <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
+            <View className="flex-row items-center justify-between px-4 py-3  border-gray-200">
               <View className="flex-row items-center">
                 <MaterialCommunityIcons
                   name="bookmark-outline"
@@ -71,7 +83,7 @@ export default function MajlisAlertDetail() {
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
+            <View className="flex-row items-center justify-between px-4 py-3  border-gray-200">
               <View className="flex-row items-center">
                 <MaterialCommunityIcons
                   name="clock-outline"
@@ -89,7 +101,7 @@ export default function MajlisAlertDetail() {
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
+            <View className="flex-row items-center justify-between px-4 py-3  border-gray-200">
               <View className="flex-row items-center">
                 <MaterialCommunityIcons
                   name="calendar-month-outline"
@@ -104,6 +116,24 @@ export default function MajlisAlertDetail() {
 
               <Text className="text-[#023f38] font-bold text-right text-sm">
                 {String(date)}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between px-4 py-3  border-gray-200">
+              <View className="flex-row items-center">
+                <MaterialCommunityIcons
+                  name="navigation-variant-outline"
+                  size={22}
+                  color="#023f38"
+                />
+
+                <Text className="text-[#023f38] font-semibold ml-3 text-base">
+                  Distance
+                </Text>
+              </View>
+
+              <Text className="text-[#023f38] font-bold text-right text-sm flex-1 ml-4 leading-6">
+                {String(distance)}
               </Text>
             </View>
 
@@ -122,24 +152,6 @@ export default function MajlisAlertDetail() {
 
               <Text className="text-[#023f38] font-bold text-right text-sm flex-1 ml-4 leading-6">
                 {String(location)}
-              </Text>
-            </View>
-
-            <View className="flex-row items-center justify-between px-4 py-3">
-              <View className="flex-row items-center">
-                <MaterialCommunityIcons
-                  name="navigation-variant-outline"
-                  size={22}
-                  color="#023f38"
-                />
-
-                <Text className="text-[#023f38] font-semibold ml-3 text-base">
-                  Distance
-                </Text>
-              </View>
-
-              <Text className="text-[#023f38] font-bold text-right text-sm flex-1 ml-4 leading-6">
-                {String(distance)}
               </Text>
             </View>
           </View>

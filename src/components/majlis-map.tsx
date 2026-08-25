@@ -1,8 +1,8 @@
 import MapView, { Circle, Marker, Callout, Region } from "react-native-maps";
 import type { Majlis } from "../types/majlis";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, View, Text } from "react-native";
-import { useRef, useState } from "react";
+import { Pressable, View, Text, useWindowDimensions } from "react-native";
+import { useRef, useState, useEffect } from "react";
 
 type MajlisMapProps = {
   userLocation: {
@@ -13,6 +13,7 @@ type MajlisMapProps = {
   majlisList: Majlis[];
   onMarkerPress: (majlis: Majlis) => void;
   isFullScreen?: boolean;
+  isModalMap?: boolean;
 };
 const mapStyle = [
   {
@@ -38,8 +39,13 @@ const MajlisMap = ({
   majlisList,
   onMarkerPress,
   isFullScreen = false,
+  isModalMap = false,
 }: MajlisMapProps) => {
   const mapRef = useRef<MapView>(null);
+
+  const [isMapReady, setIsMapReady] = useState(false);
+  const hasSetInitialRadiusView = useRef(false);
+  const { height } = useWindowDimensions();
 
   const [currentRegion, setCurrentRegion] = useState<Region>({
     latitude: userLocation?.latitude ?? defaultRegion.latitude,
@@ -49,7 +55,7 @@ const MajlisMap = ({
   });
 
   const focusOnVisibleArea = (latitude: number, longitude: number) => {
-    const latitudeOffset = currentRegion.latitudeDelta * 0.2;
+    const latitudeOffset = isModalMap ? 0 : currentRegion.latitudeDelta * 0.2;
 
     mapRef.current?.animateToRegion(
       {
@@ -62,10 +68,63 @@ const MajlisMap = ({
     );
   };
 
+  useEffect(() => {
+    if (
+      !isMapReady ||
+      !userLocation ||
+      isModalMap ||
+      hasSetInitialRadiusView.current
+    ) {
+      return;
+    }
+
+    const latitudeRadius = selectedDistance / 111.32;
+
+    const longitudeRadius =
+      selectedDistance /
+      (111.32 * Math.cos((userLocation.latitude * Math.PI) / 180));
+
+    const radiusBoundary = [
+      {
+        latitude: userLocation.latitude + latitudeRadius,
+        longitude: userLocation.longitude,
+      },
+      {
+        latitude: userLocation.latitude - latitudeRadius,
+        longitude: userLocation.longitude,
+      },
+      {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude + longitudeRadius,
+      },
+      {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude - longitudeRadius,
+      },
+    ];
+
+    mapRef.current?.fitToCoordinates(radiusBoundary, {
+      edgePadding: {
+        top: 50,
+        right: 35,
+        bottom: height * 0.47 + 30,
+        left: 35,
+      },
+      animated: true,
+    });
+
+    hasSetInitialRadiusView.current = true;
+  }, [isMapReady, userLocation, selectedDistance, isModalMap, height]);
+
+
+
   return (
     <View style={isFullScreen ? { flex: 1 } : { height: 280, width: "100%" }}>
       <MapView
         style={{ flex: 1 }}
+        onMapReady={() => {
+          setIsMapReady(true);
+        }}
         initialRegion={
           userLocation
             ? {
@@ -181,7 +240,7 @@ const MajlisMap = ({
           style={{
             position: "absolute",
             left: 16,
-            top: 352,
+            ...(isModalMap ? { bottom: 30 } : { top: 352 }),
             width: 47,
             height: 47,
             borderRadius: "100%",
