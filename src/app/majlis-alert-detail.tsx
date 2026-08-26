@@ -19,6 +19,7 @@ export default function MajlisAlertDetail() {
   const posterHeight = height * 0.52;
 
   const {
+    id,
     name,
     category,
     time,
@@ -26,6 +27,8 @@ export default function MajlisAlertDetail() {
     location,
     distance,
     posterFileId,
+    latitude,
+    longitude,
   } = useLocalSearchParams();
 
   const posterImageUrl =
@@ -53,108 +56,147 @@ export default function MajlisAlertDetail() {
         <ImageBackground
           source={{ uri: posterImageUrl }}
           resizeMode="contain"
-          className="flex-1 mx-5 my-3 overflow-hidden rounded-2xl"
-          imageStyle={{ borderRadius: 16 }}
+          className="flex-1 mx-5 mb-3 overflow-hidden rounded-2xl"
+          imageStyle={{
+            borderRadius: 16,
+          }}
         />
       </View>
 
       <View className="flex-1 bg-[#fdf9f4] rounded-t-3xl -mt-6 px-5 pt-7">
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: 30,
+          }}
+        >
           <Text className="text-xl font-extrabold text-[#023f38] text-center leading-8 px-2">
             {String(name)}
           </Text>
 
-          <View className="bg-white rounded-2xl mt-7 overflow-hidden border border-gray-200">
-            <View className="flex-row items-center justify-between px-4 py-3  border-gray-200">
-              <View className="flex-row items-center">
-                <MaterialCommunityIcons
-                  name="bookmark-outline"
-                  size={22}
-                  color="#023f38"
-                />
+          <View className="flex-row mt-7">
+            {/* Category */}
+            <View className="flex-1 items-center px-1">
+              <MaterialCommunityIcons
+                name="bookmark-outline"
+                size={23}
+                color="#025e44"
+              />
 
-                <Text className="text-[#023f38] font-semibold ml-3 text-base">
-                  Category
-                </Text>
-              </View>
+              <Text className="text-[11px] text-gray-500 mt-2">Category</Text>
 
-              <Text className="text-[#023f38] font-bold text-right text-sm">
+              <Text
+                className="text-[#023f38] font-bold text-xs mt-1 text-center"
+                numberOfLines={2}
+              >
                 {String(category)}
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-between px-4 py-3  border-gray-200">
-              <View className="flex-row items-center">
-                <MaterialCommunityIcons
-                  name="clock-outline"
-                  size={22}
-                  color="#023f38"
-                />
+            <View className="w-px bg-[#e5d7c2]" />
 
-                <Text className="text-[#023f38] font-semibold ml-3 text-base">
-                  Time
-                </Text>
-              </View>
+            {/* Time */}
+            <View className="flex-1 items-center px-1">
+              <MaterialCommunityIcons
+                name="clock-outline"
+                size={23}
+                color="#025e44"
+              />
 
-              <Text className="text-[#023f38] font-bold text-right text-sm">
+              <Text className="text-[11px] text-gray-500 mt-2">Time</Text>
+
+              <Text className="text-[#023f38] font-bold text-xs mt-1 text-center">
                 {String(time)}
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-between px-4 py-3  border-gray-200">
-              <View className="flex-row items-center">
-                <MaterialCommunityIcons
-                  name="calendar-month-outline"
-                  size={22}
-                  color="#023f38"
-                />
+            <View className="w-px bg-[#e5d7c2]" />
 
-                <Text className="text-[#023f38] font-semibold ml-3 text-base">
-                  Date
-                </Text>
-              </View>
+            {/* Date */}
+            <View className="flex-1 items-center px-1">
+              <MaterialCommunityIcons
+                name="calendar-month-outline"
+                size={23}
+                color="#025e44"
+              />
 
-              <Text className="text-[#023f38] font-bold text-right text-sm">
+              <Text className="text-[11px] text-gray-500 mt-2">Date</Text>
+
+              <Text
+                className="text-[#023f38] font-bold text-xs mt-1 text-center leading-4"
+                numberOfLines={2}
+              >
                 {String(date)}
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-between px-4 py-3  border-gray-200">
-              <View className="flex-row items-center">
-                <MaterialCommunityIcons
-                  name="navigation-variant-outline"
-                  size={22}
-                  color="#023f38"
-                />
+            <View className="w-px bg-[#e5d7c2]" />
 
-                <Text className="text-[#023f38] font-semibold ml-3 text-base">
-                  Distance
-                </Text>
-              </View>
+            {/* Distance */}
+            <View className="flex-1 items-center px-1">
+              <MaterialCommunityIcons
+                name="navigation-variant-outline"
+                size={23}
+                color="#025e44"
+              />
 
-              <Text className="text-[#023f38] font-bold text-right text-sm flex-1 ml-4 leading-6">
+              <Text className="text-[11px] text-gray-500 mt-2">Distance</Text>
+
+              <Text className="text-[#023f38] font-bold text-xs mt-1 text-center">
                 {String(distance)}
               </Text>
             </View>
+          </View>
 
-            <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-              <View className="flex-row items-center">
-                <MaterialCommunityIcons
-                  name="map-marker-outline"
-                  size={22}
-                  color="#023f38"
-                />
+          {/* Location */}
+          <View className="flex-row items-start mt-9">
+            <View className="w-11 h-11 rounded-full bg-[#e8f1ee] items-center justify-center">
+              <MaterialCommunityIcons
+                name="map-marker-outline"
+                size={25}
+                color="#025e44"
+              />
+            </View>
 
-                <Text className="text-[#023f38] font-semibold ml-3 text-base">
-                  Location
-                </Text>
-              </View>
+            <View className="ml-4 flex-1">
+              <Text className="text-xs text-gray-500">Location</Text>
 
-              <Text className="text-[#023f38] font-bold text-right text-sm flex-1 ml-4 leading-6">
+              <Text className="text-[#023f38] font-bold text-base mt-1 leading-6">
                 {String(location)}
               </Text>
             </View>
           </View>
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/majlis-full-map",
+                params: {
+                  mode: "single",
+                  id: String(id),
+                  name: String(name),
+                  category: String(category),
+                  time: String(time),
+                  date: String(date),
+                  location: String(location),
+                  distance: String(distance),
+                  posterFileId: String(posterFileId),
+                  latitude: String(latitude),
+                  longitude: String(longitude),
+                },
+              })
+            }
+            className="bg-[#025e44] rounded-xl py-4 mt-8 mb-8 flex-row items-center justify-center"
+          >
+            <MaterialCommunityIcons
+              name="map-outline"
+              size={22}
+              color="white"
+            />
+
+            <Text className="text-white font-bold text-base ml-2">
+              View Full Map
+            </Text>
+          </Pressable>
         </ScrollView>
       </View>
     </SafeAreaView>

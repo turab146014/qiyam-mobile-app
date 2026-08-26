@@ -14,7 +14,14 @@ type MajlisMapProps = {
   onMarkerPress: (majlis: Majlis) => void;
   isFullScreen?: boolean;
   isModalMap?: boolean;
+  initialCenter?: {
+    latitude: number;
+    longitude: number;
+  } | null;
+
+  showRadius?: boolean;
 };
+
 const mapStyle = [
   {
     featureType: "poi",
@@ -26,6 +33,7 @@ const mapStyle = [
     ],
   },
 ];
+
 const defaultRegion = {
   latitude: 31.5204,
   longitude: 74.3587,
@@ -40,6 +48,8 @@ const MajlisMap = ({
   onMarkerPress,
   isFullScreen = false,
   isModalMap = false,
+  initialCenter = null,
+  showRadius = true,
 }: MajlisMapProps) => {
   const mapRef = useRef<MapView>(null);
 
@@ -72,7 +82,8 @@ const MajlisMap = ({
     if (
       !isMapReady ||
       !userLocation ||
-      isModalMap ||
+      !showRadius ||
+      initialCenter ||
       hasSetInitialRadiusView.current
     ) {
       return;
@@ -107,7 +118,7 @@ const MajlisMap = ({
       edgePadding: {
         top: 50,
         right: 35,
-        bottom: height * 0.47 + 30,
+        bottom: isModalMap ? 50 : height * 0.47 + 30,
         left: 35,
       },
       animated: true,
@@ -115,8 +126,6 @@ const MajlisMap = ({
 
     hasSetInitialRadiusView.current = true;
   }, [isMapReady, userLocation, selectedDistance, isModalMap, height]);
-
-
 
   return (
     <View style={isFullScreen ? { flex: 1 } : { height: 280, width: "100%" }}>
@@ -126,14 +135,21 @@ const MajlisMap = ({
           setIsMapReady(true);
         }}
         initialRegion={
-          userLocation
+          initialCenter
             ? {
-                latitude: userLocation.latitude,
-                longitude: userLocation.longitude,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
+                latitude: initialCenter.latitude,
+                longitude: initialCenter.longitude,
+                latitudeDelta: 0.02,
+                longitudeDelta: 0.02,
               }
-            : defaultRegion
+            : userLocation
+              ? {
+                  latitude: userLocation.latitude,
+                  longitude: userLocation.longitude,
+                  latitudeDelta: 0.05,
+                  longitudeDelta: 0.05,
+                }
+              : defaultRegion
         }
         customMapStyle={mapStyle}
         poiClickEnabled={false}
@@ -148,7 +164,7 @@ const MajlisMap = ({
           setCurrentRegion(region);
         }}
       >
-        {userLocation && (
+        {showRadius && userLocation && (
           <Circle
             center={{
               latitude: userLocation.latitude,

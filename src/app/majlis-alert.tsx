@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MajlisCard from "../components/majlis-card";
 import MajlisMap from "../components/majlis-map";
@@ -29,8 +29,6 @@ export default function MajlisAlertScreen() {
   const [majlisList, setMajlisList] = useState<Majlis[]>([]);
   const [appwriteLoading, setAppwriteLoading] = useState(false);
   const [appwriteError, setAppwriteError] = useState("");
-
-  const [isFullMapVisible, setIsFullMapVisible] = useState(false);
 
   useEffect(() => {
     const fetchMajlisData = async () => {
@@ -86,11 +84,10 @@ export default function MajlisAlertScreen() {
   ]);
 
   const handleMajlisPress = (item: Majlis) => {
-    setIsFullMapVisible(false);
-
     router.push({
       pathname: "/majlis-alert-detail",
       params: {
+        id: String(item.id),
         name: item.name,
         category: item.category,
         time: item.time,
@@ -98,6 +95,8 @@ export default function MajlisAlertScreen() {
         location: item.location,
         distance: item.distance,
         posterFileId: item.posterFileId,
+        latitude: String(item.latitude),
+        longitude: String(item.longitude),
       },
     });
   };
@@ -114,37 +113,22 @@ export default function MajlisAlertScreen() {
         />
 
         <Pressable
-          onPress={() => setIsFullMapVisible(true)}
+          onPress={() =>
+            router.push({
+              pathname: "/majlis-full-map",
+              params: {
+                mode: "all",
+                selectedDistance: String(selectedDistance),
+                majlisData: JSON.stringify(filteredMajlis),
+              },
+            })
+          }
           className="absolute right-4 bg-white rounded-full p-3 shadow-md"
           style={{ bottom: "50%" }}
         >
           <MaterialCommunityIcons name="fullscreen" size={26} color="#023f38" />
         </Pressable>
       </View>
-
-      <Modal
-        visible={isFullMapVisible}
-        animationType="slide"
-        onRequestClose={() => setIsFullMapVisible(false)}
-      >
-        <View style={{ flex: 1 }}>
-          <MajlisMap
-            userLocation={userLocation}
-            selectedDistance={selectedDistance}
-            majlisList={filteredMajlis}
-            onMarkerPress={handleMajlisPress}
-            isFullScreen={true}
-            isModalMap={true}
-          />
-
-          <Pressable
-            onPress={() => setIsFullMapVisible(false)}
-            className="absolute top-12 right-5 bg-white rounded-full p-3"
-          >
-            <MaterialCommunityIcons name="close" size={26} color="#023f38" />
-          </Pressable>
-        </View>
-      </Modal>
 
       {locationError !== "" && (
         <View className="bg-white border border-red-300 rounded-xl p-4">
