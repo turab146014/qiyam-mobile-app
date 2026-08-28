@@ -20,6 +20,9 @@ type MajlisMapProps = {
   } | null;
 
   showRadius?: boolean;
+
+  onMarkerSelect?: (majlis: Majlis) => void;
+  showNativeToolbar?: boolean;
 };
 
 const mapStyle = [
@@ -50,6 +53,8 @@ const MajlisMap = ({
   isModalMap = false,
   initialCenter = null,
   showRadius = true,
+  onMarkerSelect,
+  showNativeToolbar = true,
 }: MajlisMapProps) => {
   const mapRef = useRef<MapView>(null);
 

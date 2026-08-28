@@ -8,9 +8,11 @@ import {
   Text,
   View,
   useWindowDimensions,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { appwriteConfig } from "../services/appwrite";
+import { useState } from "react";
 
 export default function MajlisAlertDetail() {
   const router = useRouter();
@@ -35,6 +37,8 @@ export default function MajlisAlertDetail() {
     typeof posterFileId === "string" && posterFileId.trim() !== ""
       ? `${appwriteConfig.endpoint}/storage/buckets/${appwriteConfig.posterBucketId}/files/${posterFileId}/view?project=${appwriteConfig.projectId}`
       : "";
+
+  const [isPosterFullScreen, setIsPosterFullScreen] = useState(false);
 
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">
@@ -61,6 +65,12 @@ export default function MajlisAlertDetail() {
             borderRadius: 16,
           }}
         />
+        <Pressable
+          onPress={() => setIsPosterFullScreen(true)}
+          className="absolute bottom-8 right-7 bg-white rounded-full p-3"
+        >
+          <MaterialCommunityIcons name="fullscreen" size={24} color="#023f38" />
+        </Pressable>
       </View>
 
       <View className="flex-1 bg-[#fdf9f4] rounded-t-3xl -mt-6 px-5 pt-7">
@@ -199,6 +209,32 @@ export default function MajlisAlertDetail() {
           </Pressable>
         </ScrollView>
       </View>
+
+      <Modal
+        visible={isPosterFullScreen}
+        animationType="fade"
+        onRequestClose={() => setIsPosterFullScreen(false)}
+        statusBarTranslucent
+      >
+        <View className="flex-1 bg-black">
+          <Image
+            source={{ uri: posterImageUrl }}
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
+            resizeMode="contain"
+          />
+
+          <Pressable
+            onPress={() => setIsPosterFullScreen(false)}
+            className="absolute top-12 right-5 bg-white rounded-full p-3"
+          >
+            <MaterialCommunityIcons name="close" size={26} color="#023f38" />
+          </Pressable>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
