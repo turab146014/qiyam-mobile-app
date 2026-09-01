@@ -161,7 +161,7 @@ const MajlisMap = ({
         showsUserLocation={true}
         showsMyLocationButton={false}
         showsCompass={false}
-        toolbarEnabled={true}
+        toolbarEnabled={showNativeToolbar}
         zoomControlEnabled={false}
         moveOnMarkerPress={true}
         ref={mapRef}
@@ -192,6 +192,8 @@ const MajlisMap = ({
             title={majlis.name}
             onPress={() => {
               focusOnVisibleArea(majlis.latitude, majlis.longitude);
+
+              onMarkerSelect?.(majlis);
             }}
           >
             <View

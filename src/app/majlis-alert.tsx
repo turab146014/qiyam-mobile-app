@@ -143,6 +143,8 @@ export default function MajlisAlertScreen() {
         style={{ height: "47%" }}
       >
         <ScrollView
+          showsVerticalScrollIndicator={true}
+          persistentScrollbar={true}
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingTop: 20,

@@ -1,15 +1,17 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
-
+import { Linking, Pressable, Text, View } from "react-native";
 import MajlisMap from "../components/majlis-map";
 import { useCurrentLocation } from "../hooks/useCurrentLocation";
 import type { Majlis } from "../types/majlis";
 import { getMajlisDateLabel } from "../utils/dateLabel";
+import { useState } from "react";
 
 export default function MajlisFullMapScreen() {
   const router = useRouter();
-
+  const [selectedMapMajlis, setSelectedMapMajlis] = useState<Majlis | null>(
+    null,
+  );
   const { userLocation } = useCurrentLocation();
 
   const {
@@ -28,21 +30,16 @@ export default function MajlisFullMapScreen() {
     majlisData,
   } = useLocalSearchParams();
 
-  // Check where the full map was opened from
   const isAllMode = mode === "all";
 
-  // Convert route coordinates into numbers
   const majlisLatitude = Number(latitude);
   const majlisLongitude = Number(longitude);
 
-  // Use 5 km if selectedDistance is not available
   const mapDistance = Number(selectedDistance) || 5;
 
-  // Check whether selected Majlis coordinates are valid
   const hasValidCoordinates =
     Number.isFinite(majlisLatitude) && Number.isFinite(majlisLongitude);
 
-  // Create one Majlis object when opened from Majlis Detail
   const selectedMajlis: Majlis | null = hasValidCoordinates
     ? {
         id: Number(id) || 0,
@@ -61,7 +58,8 @@ export default function MajlisFullMapScreen() {
       }
     : null;
 
-  // Majlis list received from Majlis Alert screen
+  const directionMajlis = isAllMode ? selectedMapMajlis : selectedMajlis;
+
   let allMajlis: Majlis[] = [];
 
   if (isAllMode && typeof majlisData === "string") {
@@ -72,7 +70,6 @@ export default function MajlisFullMapScreen() {
     }
   }
 
-  // Decide which markers should be displayed
   const mapMajlisList = isAllMode
     ? allMajlis
     : selectedMajlis
@@ -119,6 +116,24 @@ export default function MajlisFullMapScreen() {
     );
   }
 
+  const handleDirections = async () => {
+    if (!directionMajlis) {
+      return;
+    }
+
+    const destination = `${directionMajlis.latitude},${directionMajlis.longitude}`;
+
+    const url = userLocation
+      ? `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${destination}&travelmode=driving`
+      : `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
+
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.log("Unable to open directions:", error);
+    }
+  };
+
   return (
     <View className="flex-1">
       <MajlisMap
@@ -137,7 +152,25 @@ export default function MajlisFullMapScreen() {
             : null
         }
         showRadius={isAllMode}
+        onMarkerSelect={(majlis) => {
+          setSelectedMapMajlis(majlis);
+        }}
+        showNativeToolbar={false}
       />
+
+      {directionMajlis && (
+        <Pressable
+          onPress={handleDirections}
+          className="absolute bottom-8 right-5 bg-[#025e44] rounded-full px-5 py-3 flex-row items-center"
+          style={{
+            elevation: 6,
+          }}
+        >
+          <MaterialCommunityIcons name="directions" size={22} color="white" />
+
+          <Text className="text-white font-bold ml-2">Directions</Text>
+        </Pressable>
+      )}
 
       <Pressable
         onPress={() => router.back()}
