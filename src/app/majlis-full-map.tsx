@@ -161,14 +161,13 @@ export default function MajlisFullMapScreen() {
       {directionMajlis && (
         <Pressable
           onPress={handleDirections}
-          className="absolute bottom-8 right-5 bg-[#025e44] rounded-full px-5 py-3 flex-row items-center"
+          className="absolute bottom-8 right-5 bg-white rounded-full p-3"
           style={{
             elevation: 6,
           }}
         >
-          <MaterialCommunityIcons name="directions" size={22} color="white" />
+          <MaterialCommunityIcons name="directions" size={26} color="#025e44" />
 
-          <Text className="text-white font-bold ml-2">Directions</Text>
         </Pressable>
       )}
 
