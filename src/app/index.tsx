@@ -54,10 +54,13 @@ export default function HomeScreen() {
             />
           </Pressable>
 
-          <Pressable className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c]">
+          <Pressable
+            className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c]"
+            onPress={() => router.push("/login")}
+          >
             <View className="h-14 w-14 items-center justify-center rounded-full bg-[#0b6b5a]">
               <MaterialCommunityIcons
-                name="clock-outline"
+                name="calendar-plus"
                 size={26}
                 color="#fefefd"
               />
@@ -65,11 +68,11 @@ export default function HomeScreen() {
 
             <View className="ml-4 flex-1">
               <Text className="text-lg font-bold text-gray-900">
-                Prayer Times
+                Post An Event
               </Text>
 
               <Text className="mt-1 text-sm text-gray-600">
-                View daily prayer times
+                Share a majlis with the community
               </Text>
             </View>
 
@@ -90,7 +93,9 @@ export default function HomeScreen() {
             </View>
 
             <View className="ml-4 flex-1">
-              <Text className="text-lg font-bold text-gray-900">Events</Text>
+              <Text className="text-lg font-bold text-gray-900">
+                Prayer Times
+              </Text>
 
               <Text className="mt-1 text-sm text-gray-600">
                 Browse community events
