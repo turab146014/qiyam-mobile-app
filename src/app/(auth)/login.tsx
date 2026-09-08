@@ -1,23 +1,28 @@
-import { View, Pressable, TextInput, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
 import { useRouter } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import AuthButton from "../../components/auth/AuthButton";
+import AuthInput from "../../components/auth/AuthInput";
+import PasswordInput from "../../components/auth/PasswordInput";
 
 export default function Login() {
   const router = useRouter();
+
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
   const [identifierError, setIdentifierError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const handleSubmit = () => {
+  const handleSignIn = () => {
     setIdentifierError("");
     setPasswordError("");
 
     if (identifier.trim() === "") {
-      setIdentifierError("Email is required");
+      setIdentifierError("Email, phone number or username is required");
       return;
     }
 
@@ -26,40 +31,56 @@ export default function Login() {
       return;
     }
 
-    console.log("Form is Valid");
+    console.log("Login form is valid");
   };
 
   return (
     <SafeAreaView className="flex-1 bg-[#fdf9f4]">
-      <View className="flex-1 items-center justify-center">
-        <TextInput
+      <View className="flex-1 px-6 pt-8">
+        <View className="mb-8">
+          <Text className="text-3xl font-bold text-[#023f38]">
+            Welcome Back
+          </Text>
+
+          <Text className="mt-2 text-base text-gray-600">
+            Sign in to continue to Qiyam
+          </Text>
+        </View>
+
+        <Text className="mb-2 font-semibold text-gray-800">
+          Email / Phone No. / Username
+        </Text>
+
+        <AuthInput
           value={identifier}
+          placeholder="Enter email, phone number or username"
           onChangeText={(text) => {
             setIdentifier(text);
             setIdentifierError("");
           }}
-          placeholder="Email / Phone No. / Username"
-          placeholderTextColor="#9ca3af"
-          autoCapitalize="none"
-          className="border border-gray-300 rounded-xl bg-white px-4 py-4 text-base"
         />
 
         {identifierError !== "" && (
           <Text className="mt-1 text-sm text-red-500">{identifierError}</Text>
         )}
 
-        <TextInput
+        <Text className="mb-2 mt-5 font-semibold text-gray-800">Password</Text>
+
+        <PasswordInput
           value={password}
+          placeholder="Enter your Password"
           onChangeText={(text) => {
             setPassword(text);
             setPasswordError("");
           }}
-          secureTextEntry={!showPassword}
-          placeholder="Password"
-          placeholderTextColor="#9ca3af"
-          autoCapitalize="none"
-          className="border border-gray-300 rounded-xl bg-white px-4 py-4 text-base"
+          showPassword={showPassword}
+          onTogglePassword={() => setShowPassword(!showPassword)}
         />
+
+        {passwordError !== "" && (
+          <Text className="mt-1 text-sm text-red-500">{passwordError}</Text>
+        )}
+
         <Pressable
           onPress={() => router.push("/forgot-password")}
           className="mt-3 self-end"
@@ -67,24 +88,15 @@ export default function Login() {
           <Text className="font-semibold text-[#0b6b5a]">Forgot Password?</Text>
         </Pressable>
 
-        {passwordError !== "" && (
-          <Text className="mt-1 text-sm text-red-500">{passwordError}</Text>
-        )}
+        <AuthButton title="Sign In" onPress={handleSignIn} />
 
-        <Pressable onPress={() => setShowPassword(!showPassword)}>
-          <MaterialCommunityIcons
-            name={showPassword ? "eye-outline" : "eye-off-outline"}
-            size={22}
-            color="#6b7280"
-          />
-        </Pressable>
+        <View className="mt-8 flex-row justify-center">
+          <Text className="text-gray-600">Don't have an account? </Text>
 
-        <Pressable
-          className="mt-8 items-center rounded-xl bg-[#0b6b5a] py-4"
-          onPress={handleSubmit}
-        >
-          <Text className="text-base font-bold text-white">Login In</Text>
-        </Pressable>
+          <Pressable onPress={() => router.push("/signup")}>
+            <Text className="font-bold text-[#0b6b5a]">Sign Up</Text>
+          </Pressable>
+        </View>
       </View>
     </SafeAreaView>
   );
