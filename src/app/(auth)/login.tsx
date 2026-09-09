@@ -7,6 +7,8 @@ import AuthButton from "../../components/auth/AuthButton";
 import AuthInput from "../../components/auth/AuthInput";
 import PasswordInput from "../../components/auth/PasswordInput";
 
+import { getCurrentUser, loginAccount } from "../../services/auth/authService";
+
 export default function Login() {
   const router = useRouter();
 
@@ -17,7 +19,7 @@ export default function Login() {
   const [identifierError, setIdentifierError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     setIdentifierError("");
     setPasswordError("");
 
@@ -31,7 +33,17 @@ export default function Login() {
       return;
     }
 
-    console.log("Login form is valid");
+    try {
+      const session = await loginAccount(identifier, password);
+
+      console.log("Login successful:", session.$id);
+
+      const user = await getCurrentUser();
+
+      console.log("Current user:", user.email);
+    } catch (error) {
+      console.log("Login error:", error);
+    }
   };
 
   return (

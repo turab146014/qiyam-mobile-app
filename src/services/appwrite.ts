@@ -1,5 +1,5 @@
 import "react-native-url-polyfill/auto";
-import { Client, TablesDB } from "react-native-appwrite";
+import { Client, Account, TablesDB } from "react-native-appwrite";
 
 export const appwriteConfig = {
   endpoint: "https://syd.cloud.appwrite.io/v1",
@@ -18,3 +18,5 @@ client
   .setPlatform(appwriteConfig.platform);
 
 export const tablesDB = new TablesDB(client);
+export const account = new Account(client);
+

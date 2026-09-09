@@ -8,6 +8,8 @@ import AuthInput from "../../components/auth/AuthInput";
 import PasswordInput from "../../components/auth/PasswordInput";
 import { getPasswordStrength } from "../../utils/auth/passwordStrength";
 
+import { createAccount } from "../../services/auth/authService";
+
 export default function SignUp() {
   const router = useRouter();
 
@@ -28,7 +30,7 @@ export default function SignUp() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     setEmailError("");
     setUsernameError("");
     setPhoneError("");
@@ -91,13 +93,17 @@ export default function SignUp() {
       return;
     }
 
-    router.push({
-      pathname: "/verify-otp",
-      params: {
-        purpose: "signup",
-        email: email.trim(),
-      },
-    });
+    try {
+      const user = await createAccount({
+        email,
+        password,
+        username,
+      });
+
+      console.log("Account created:", user.$id);
+    } catch (error) {
+      console.log("Signup error:", error);
+    }
   };
 
   return (
