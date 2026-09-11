@@ -30,7 +30,10 @@ export default function SignUp() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
+  const [signupError, setSignupError] = useState("");
+
   const handleSignup = async () => {
+    setSignupError("");
     setEmailError("");
     setUsernameError("");
     setPhoneError("");
@@ -103,6 +106,8 @@ export default function SignUp() {
       console.log("Account created:", user.$id);
     } catch (error) {
       console.log("Signup error:", error);
+
+      setSignupError("Unable to create account. Please try again.");
     }
   };
 
@@ -234,6 +239,11 @@ export default function SignUp() {
           </Text>
         )}
 
+        {signupError !== "" && (
+          <Text className="mt-3 text-center text-sm text-red-500">
+            {signupError}
+          </Text>
+        )}
         <AuthButton title="Sign Up" onPress={handleSignup} />
 
         <View className="mt-6 flex-row justify-center">

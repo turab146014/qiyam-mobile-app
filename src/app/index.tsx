@@ -1,9 +1,31 @@
 import { View, Text, Pressable, ImageBackground } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { checkSession, logoutAccount } from "../services/auth/authService";
 
 export default function HomeScreen() {
   const router = useRouter();
+
+  const handlePostMajlis = async () => {
+    const user = await checkSession();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    console.log("Authenticated user:", user.email);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutAccount();
+
+      console.log("Logout successful");
+    } catch (error) {
+      console.log("Logout error:", error);
+    }
+  };
 
   return (
     <ImageBackground
@@ -56,7 +78,7 @@ export default function HomeScreen() {
 
           <Pressable
             className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c]"
-            onPress={() => router.push("/login")}
+            onPress={handlePostMajlis}
           >
             <View className="h-14 w-14 items-center justify-center rounded-full bg-[#0b6b5a]">
               <MaterialCommunityIcons
@@ -81,6 +103,13 @@ export default function HomeScreen() {
               size={26}
               color="#b47a2b"
             />
+          </Pressable>
+
+          <Pressable
+            onPress={handleLogout}
+            className="mt-4 items-center rounded-xl bg-red-500 px-6 py-4"
+          >
+            <Text className="font-bold text-white">Logout</Text>
           </Pressable>
 
           <Pressable className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c]">

@@ -19,9 +19,12 @@ export default function Login() {
   const [identifierError, setIdentifierError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
+  const [loginError, setLoginError] = useState("");
+
   const handleSignIn = async () => {
     setIdentifierError("");
     setPasswordError("");
+    setLoginError("");
 
     if (identifier.trim() === "") {
       setIdentifierError("Email, phone number or username is required");
@@ -41,8 +44,11 @@ export default function Login() {
       const user = await getCurrentUser();
 
       console.log("Current user:", user.email);
+      router.replace("/");
     } catch (error) {
       console.log("Login error:", error);
+
+      setLoginError("Unable to sign in. Please check your email and password.");
     }
   };
 
@@ -99,6 +105,12 @@ export default function Login() {
         >
           <Text className="font-semibold text-[#0b6b5a]">Forgot Password?</Text>
         </Pressable>
+
+        {loginError !== "" && (
+          <Text className="mt-3 text-center text-sm text-red-500">
+            {loginError}
+          </Text>
+        )}
 
         <AuthButton title="Sign In" onPress={handleSignIn} />
 

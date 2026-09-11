@@ -27,7 +27,6 @@ export const loginAccount = async (email: string, password: string) => {
   });
 };
 
-
 export const getCurrentUser = async () => {
   return await account.get();
 };
@@ -36,4 +35,14 @@ export const logoutAccount = async () => {
   return await account.deleteSession({
     sessionId: "current",
   });
+};
+
+export const checkSession = async () => {
+  try {
+    const user = await getCurrentUser();
+
+    return user;
+  } catch {
+    return null;
+  }
 };
