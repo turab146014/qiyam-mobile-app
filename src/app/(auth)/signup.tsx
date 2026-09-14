@@ -9,6 +9,7 @@ import PasswordInput from "../../components/auth/PasswordInput";
 import { getPasswordStrength } from "../../utils/auth/passwordStrength";
 
 import { createAccount } from "../../services/auth/authService";
+import { createOtpRecord } from "../../services/auth/otpService";
 
 export default function SignUp() {
   const router = useRouter();
@@ -104,6 +105,14 @@ export default function SignUp() {
       });
 
       console.log("Account created:", user.$id);
+
+      await createOtpRecord({
+        userId: user.$id,
+        email,
+        otp: "123456",
+      });
+
+      console.log("OTP record created");
     } catch (error) {
       console.log("Signup error:", error);
 

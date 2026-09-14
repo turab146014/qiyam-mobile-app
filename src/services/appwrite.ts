@@ -8,6 +8,7 @@ export const appwriteConfig = {
   databaseId: "6a61f9b40035dfd0f2da",
   majlisTableId: "majlis",
   posterBucketId: "6a6b33ca00359e40be95",
+  otpTableId: "6aa7eabd0027eba8f25b",
 };
 
 const client = new Client();
@@ -19,4 +20,3 @@ client
 
 export const tablesDB = new TablesDB(client);
 export const account = new Account(client);
-
