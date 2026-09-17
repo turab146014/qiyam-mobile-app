@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -20,6 +20,7 @@ export default function VerifyOtp() {
   const [otpError, setOtpError] = useState("");
 
   const [loadingResend, setLoadingResend] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
 
   const verificationTarget = phone ?? email;
 
@@ -52,7 +53,11 @@ export default function VerifyOtp() {
     } catch (error) {
       console.log("OTP verification error:", error);
 
-      setOtpError("Invalid OTP");
+      if (error instanceof Error) {
+        setOtpError(error.message);
+      } else {
+        setOtpError("Unable to verify OTP");
+      }
     }
   };
 
@@ -63,12 +68,26 @@ export default function VerifyOtp() {
       const newOtp = await resendOtp(email as string);
 
       console.log("New OTP:", newOtp);
+
+      setResendTimer(60);
     } catch (error) {
       console.log("Resend OTP error:", error);
     } finally {
       setLoadingResend(false);
     }
   };
+
+  useEffect(() => {
+    if (resendTimer === 0) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setResendTimer((previous) => previous - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [resendTimer]);
 
   return (
     <SafeAreaView className="flex-1 bg-[#fdf9f4]">
@@ -114,11 +133,15 @@ export default function VerifyOtp() {
 
         <Pressable
           onPress={handleResendOtp}
-          disabled={loadingResend}
+          disabled={loadingResend || resendTimer > 0}
           className="mt-4 items-center"
         >
           <Text className="font-bold text-[#0b6b5a]">
-            {loadingResend ? "Sending..." : "Resend OTP"}
+            {loadingResend
+              ? "Sending..."
+              : resendTimer > 0
+                ? `Resend OTP in ${resendTimer}s`
+                : "Resend OTP"}
           </Text>
         </Pressable>
       </View>

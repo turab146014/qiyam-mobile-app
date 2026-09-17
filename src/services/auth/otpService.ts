@@ -89,8 +89,6 @@ export const resendOtp = async (email: string) => {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
     },
   });
-
-  console.log("New OTP generated:", newOtp);
-
+  
   return newOtp;
 };

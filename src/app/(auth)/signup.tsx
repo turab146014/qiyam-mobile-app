@@ -117,8 +117,6 @@ export default function SignUp() {
 
       const otp = generateOtp();
 
-      console.log("Generated OTP:", otp);
-
       await createOtpRecord({
         userId: user.$id,
         email,
