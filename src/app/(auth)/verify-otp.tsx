@@ -37,11 +37,6 @@ export default function VerifyOtp() {
       return;
     }
 
-    if (purpose === "forgot-password") {
-      router.push("/reset-password");
-      return;
-    }
-
     try {
       await verifyOtp(email as string, otp);
 

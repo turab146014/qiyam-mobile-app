@@ -22,6 +22,7 @@ export default function HomeScreen() {
       await logoutAccount();
 
       console.log("Logout successful");
+      router.replace("/login");
     } catch (error) {
       console.log("Logout error:", error);
     }
