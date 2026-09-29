@@ -1,5 +1,5 @@
 import "react-native-url-polyfill/auto";
-import { Client, Account, TablesDB } from "react-native-appwrite";
+import { Client, Account, TablesDB, Functions } from "react-native-appwrite";
 
 export const appwriteConfig = {
   endpoint: "https://syd.cloud.appwrite.io/v1",
@@ -9,6 +9,7 @@ export const appwriteConfig = {
   majlisTableId: "majlis",
   posterBucketId: "6a6b33ca00359e40be95",
   otpTableId: "6aa7eabd0027eba8f25b",
+  forgotPasswordFunctionId: "6ab3c3400026f5d803fb",
 };
 
 const client = new Client();
@@ -20,3 +21,4 @@ client
 
 export const tablesDB = new TablesDB(client);
 export const account = new Account(client);
+export const functions = new Functions(client);

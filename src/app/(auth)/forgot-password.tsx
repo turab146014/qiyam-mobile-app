@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { sendForgotPasswordOtp } from "../../services/auth/forgotPasswordService";
 
 import AuthButton from "../../components/auth/AuthButton";
 import AuthInput from "../../components/auth/AuthInput";
@@ -12,7 +13,7 @@ export default function ForgotPassword() {
   const [emailAddress, setEmailAddress] = useState("");
   const [emailError, setEmailError] = useState("");
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     setEmailError("");
 
     const trimmedEmail = emailAddress.trim();
@@ -29,13 +30,27 @@ export default function ForgotPassword() {
       return;
     }
 
-    router.push({
-      pathname: "/verify-otp",
-      params: {
-        purpose: "forgot-password",
-        email: trimmedEmail,
-      },
-    });
+    try {
+      const execution = await sendForgotPasswordOtp(trimmedEmail);
+
+      console.log("Function execution:", execution);
+      console.log("Function response:", execution.responseBody);
+
+      if (execution.responseStatusCode !== 200) {
+        throw new Error("Forgot password function failed");
+      }
+
+      router.push({
+        pathname: "/verify-otp",
+        params: {
+          purpose: "forgot-password",
+          email: trimmedEmail,
+        },
+      });
+    } catch (error) {
+      console.log("Send OTP error:", error);
+      setEmailError("Unable to send OTP. Please try again.");
+    }
   };
 
   return (
