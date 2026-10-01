@@ -10,6 +10,7 @@ export const appwriteConfig = {
   posterBucketId: "6a6b33ca00359e40be95",
   otpTableId: "6aa7eabd0027eba8f25b",
   forgotPasswordFunctionId: "6ab3c3400026f5d803fb",
+  verifyForgotPasswordFunctionId: "6abcfa6600094517dd39",
 };
 
 const client = new Client();

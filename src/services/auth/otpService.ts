@@ -1,6 +1,6 @@
-import { ID, Query } from "react-native-appwrite";
+import { ID, Query, ExecutionMethod } from "react-native-appwrite";
 
-import { tablesDB, appwriteConfig } from "../appwrite";
+import { tablesDB, functions, appwriteConfig } from "../appwrite";
 
 import { generateOtp } from "../../utils/auth/generateOtp";
 
@@ -35,7 +35,6 @@ export const verifyOtp = async (email: string, enteredOtp: string) => {
     tableId: appwriteConfig.otpTableId,
     queries: [Query.equal("email", email.trim())],
   });
-
   if (response.rows.length === 0) {
     throw new Error("OTP record not found");
   }
@@ -89,6 +88,6 @@ export const resendOtp = async (email: string) => {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
     },
   });
-  
+
   return newOtp;
 };
