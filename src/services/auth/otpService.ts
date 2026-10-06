@@ -63,6 +63,29 @@ export const verifyOtp = async (email: string, enteredOtp: string) => {
   return true;
 };
 
+export const verifyForgotPasswordOtp = async (
+  email: string,
+  enteredOtp: string,
+) => {
+  const execution = await functions.createExecution({
+    functionId: appwriteConfig.verifyForgotPasswordFunctionId,
+    body: JSON.stringify({
+      email: email.trim(),
+      otp: enteredOtp,
+    }),
+    async: false,
+    method: ExecutionMethod.POST,
+  });
+
+  const result = JSON.parse(execution.responseBody);
+
+  if (!result.success) {
+    throw new Error(result.message);
+  }
+
+  return true;
+};
+
 export const resendOtp = async (email: string) => {
   const response = await tablesDB.listRows({
     databaseId: appwriteConfig.databaseId,

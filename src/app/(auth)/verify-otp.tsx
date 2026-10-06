@@ -4,8 +4,11 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AuthButton from "../../components/auth/AuthButton";
-import { verifyOtp } from "../../services/auth/otpService";
-import { resendOtp } from "../../services/auth/otpService";
+import {
+  verifyOtp,
+  verifyForgotPasswordOtp,
+  resendOtp,
+} from "../../services/auth/otpService";
 
 export default function VerifyOtp() {
   const router = useRouter();
@@ -38,12 +41,25 @@ export default function VerifyOtp() {
     }
 
     try {
-      await verifyOtp(email as string, otp);
+      if (purpose === "forgot-password") {
+        await verifyForgotPasswordOtp(email as string, otp);
+      } else {
+        await verifyOtp(email as string, otp);
+      }
 
       console.log("OTP verified successfully");
 
       if (purpose === "signup") {
         router.replace("/login");
+      }
+
+      if (purpose === "forgot-password") {
+        router.replace({
+          pathname: "/reset-password",
+          params: {
+            email: email as string,
+          },
+        });
       }
     } catch (error) {
       console.log("OTP verification error:", error);

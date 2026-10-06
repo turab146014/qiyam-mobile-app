@@ -15,3 +15,28 @@ export const sendForgotPasswordOtp = async (email: string) => {
     },
   });
 };
+
+
+export const resetPassword = async (
+  email: string,
+  newPassword: string,
+) => {
+  const execution = await functions.createExecution({
+    functionId: appwriteConfig.verifyForgotPasswordFunctionId,
+    body: JSON.stringify({
+      action: "reset-password",
+      email: email.trim(),
+      newPassword,
+    }),
+    async: false,
+    method: ExecutionMethod.POST,
+  });
+
+  const result = JSON.parse(execution.responseBody);
+
+  if (!result.success) {
+    throw new Error(result.message);
+  }
+
+  return true;
+};
