@@ -15,17 +15,7 @@ export default function HomeScreen() {
     }
 
     console.log("Authenticated user:", user.email);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logoutAccount();
-
-      console.log("Logout successful");
-      router.replace("/login");
-    } catch (error) {
-      console.log("Logout error:", error);
-    }
+    router.push("/post-majlis");
   };
 
   return (
@@ -104,13 +94,6 @@ export default function HomeScreen() {
               size={26}
               color="#b47a2b"
             />
-          </Pressable>
-
-          <Pressable
-            onPress={handleLogout}
-            className="mt-4 items-center rounded-xl bg-red-500 px-6 py-4"
-          >
-            <Text className="font-bold text-white">Logout</Text>
           </Pressable>
 
           <Pressable className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c]">

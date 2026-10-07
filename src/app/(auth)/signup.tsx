@@ -121,6 +121,7 @@ export default function SignUp() {
         userId: user.$id,
         email,
         otp,
+        purpose: "signup",
       });
 
       console.log("OTP record created");

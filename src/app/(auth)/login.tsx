@@ -44,7 +44,8 @@ export default function Login() {
       const user = await getCurrentUser();
 
       console.log("Current user:", user.email);
-      router.replace("/");
+
+      router.push("/post-majlis");
     } catch (error) {
       console.log("Login error:", error);
 

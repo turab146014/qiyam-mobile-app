@@ -8,12 +8,14 @@ type CreateOtpParams = {
   userId: string;
   email: string;
   otp: string;
+  purpose : string;
 };
 
 export const createOtpRecord = async ({
   userId,
   email,
   otp,
+  purpose,
 }: CreateOtpParams) => {
   return await tablesDB.createRow({
     databaseId: appwriteConfig.databaseId,
@@ -25,6 +27,7 @@ export const createOtpRecord = async ({
       otp,
       isVerified: false,
       expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      purpose,
     },
   });
 };
