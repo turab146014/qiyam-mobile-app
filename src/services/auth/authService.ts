@@ -5,19 +5,41 @@ type CreateAccountParams = {
   email: string;
   password: string;
   username: string;
+  phone: string;
+  cnic: string;
 };
 
 export const createAccount = async ({
   email,
   password,
   username,
+  phone,
+  cnic,
 }: CreateAccountParams) => {
-  return await account.create({
+  const user = await account.create({
     userId: ID.unique(),
     email: email.trim(),
     password,
     name: username.trim(),
   });
+
+  await account.createEmailPasswordSession({
+    email: email.trim(),
+    password,
+  });
+
+  await account.updatePrefs({
+    prefs: {
+      phone: phone.trim(),
+      cnic: cnic.trim(),
+    },
+  });
+
+  await account.deleteSession({
+    sessionId: "current",
+  });
+
+  return user;
 };
 
 export const loginAccount = async (email: string, password: string) => {

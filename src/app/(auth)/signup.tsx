@@ -20,6 +20,8 @@ import { createAccount } from "../../services/auth/authService";
 import { createOtpRecord } from "../../services/auth/otpService";
 import { generateOtp } from "../../utils/auth/generateOtp";
 
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+
 export default function SignUp() {
   const router = useRouter();
 
@@ -111,6 +113,8 @@ export default function SignUp() {
         email,
         password,
         username,
+        phone,
+        cnic,
       });
 
       console.log("Account created:", user.$id);
@@ -143,18 +147,17 @@ export default function SignUp() {
     <SafeAreaView className="flex-1 bg-[#fdf9f4]">
       <KeyboardAvoidingView
         behavior="padding"
+        keyboardVerticalOffset={10}
         className="flex-1"
-        keyboardVerticalOffset={20}
       >
-        <ScrollView
+        <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          scrollEnabled={true}
+          enableOnAndroid={true}
+          extraScrollHeight={5}
           contentContainerStyle={{
             paddingHorizontal: 24,
             paddingTop: 24,
-            paddingBottom: 120,
           }}
         >
           <View className="mb-8">
@@ -296,7 +299,7 @@ export default function SignUp() {
               <Text className="font-bold text-[#0b6b5a]">Sign In</Text>
             </Pressable>
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
