@@ -6,16 +6,37 @@ import { getMajlisDateLabel } from "../utils/dateLabel";
 type MajlisCardProps = {
   item: Majlis;
   onPress: () => void;
+  onEdit?: () => void;
 };
 
-export default function MajlisCard({ item, onPress }: MajlisCardProps) {
+export default function MajlisCard({ item, onPress, onEdit }: MajlisCardProps) {
   const dateLabel = getMajlisDateLabel(item.dateValue, item.date);
   return (
     <Pressable
       onPress={onPress}
       className="w-full bg-white border border-[#d6a85c] rounded-xl p-4 mb-4"
     >
-      <Text className="text-base font-bold text-[#023f38]">{item.name}</Text>
+      <View className="flex-row items-center justify-between">
+        <Text className="flex-1 text-base font-bold text-[#023f38]">
+          {item.name}
+        </Text>
+
+        {onEdit && (
+          <Pressable
+            onPress={(event) => {
+              event.stopPropagation();
+              onEdit();
+            }}
+            className="ml-3"
+          >
+            <MaterialCommunityIcons
+              name="pencil-outline"
+              size={22}
+              color="#0b6b5a"
+            />
+          </Pressable>
+        )}
+      </View>
 
       <View className="flex-row items-center mt-3">
         <MaterialCommunityIcons
