@@ -15,7 +15,7 @@ export default function HomeScreen() {
     }
 
     console.log("Authenticated user:", user.email);
-    router.push("/post-majlis");
+    router.push("/post-event");
   };
 
   return (

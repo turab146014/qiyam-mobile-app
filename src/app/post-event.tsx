@@ -1,13 +1,30 @@
 import { Pressable, View, Text } from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import MajlisCard from "../components/majlis-card";
-
+import { useEffect, useState } from "react";
+import { account } from "../services/appwrite";
 import { logoutAccount } from "../services/auth/authService";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MajlisCard from "../components/majlis-card";
 
 export default function PostMajlis() {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState("Upcomming Event");
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const user = await account.get();
+
+        setUserName(user.name);
+      } catch (error) {
+        console.log("Unable to get user:", error);
+      }
+    };
+
+    loadUser();
+  }, []);
+  const [selectedCategory, setSelectedCategory] = useState("Upcoming Events");
+
   const sampleMajlis = {
     id: 1,
     name: "Majlis e Aza Imam Hussain (A.S)",
@@ -36,11 +53,29 @@ export default function PostMajlis() {
   };
   return (
     <View className="flex-1 bg-[#fdf9f4] px-5 pt-16">
-      <Text className="text-3xl font-bold text-[#023f38] text-center">
-        Post an Event
-      </Text>
+      <View className="flex-row items-start justify-between">
+        <View>
+          <Text className="text-3xl font-bold text-[#023f38]">Hello,</Text>
+
+          <Text className="text-3xl font-bold text-[#023f38]">
+            {userName ? `${userName.toUpperCase()}!` : "THERE!"}
+          </Text>
+
+          <Text className="mt-3 text-sm text-[#d6a85c]">
+            Manage your posted events here.
+          </Text>
+        </View>
+
+        <Pressable
+          onPress={handleLogout}
+          className="ml-4 h-11 w-11 items-center justify-center bg-[#ffd5d5] rounded-full"
+        >
+          <MaterialCommunityIcons name="logout" size={20} color="red" />
+        </Pressable>
+      </View>
+
       <Pressable
-        className="mt-6 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
+        className="mt-12 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
         onPress={() => router.push("/create-event")}
       >
         <Text className="font-bold text-white">+ Create New Event</Text>
@@ -62,26 +97,26 @@ export default function PostMajlis() {
                 : "text-[#023f38]"
             }`}
           >
-            Upcoming Events
+            Upcoming
           </Text>
         </Pressable>
 
         <Pressable
-          onPress={() => setSelectedCategory("Expired Events")}
+          onPress={() => setSelectedCategory("Outdated Events")}
           className={`flex-1 rounded-xl px-3 py-3 ${
-            selectedCategory === "Expired Events"
+            selectedCategory === "Outdated Events"
               ? "bg-[#0b6b5a]"
               : "bg-white border border-[#d6a85c]"
           }`}
         >
           <Text
             className={`text-center text-sm font-bold ${
-              selectedCategory === "Expired Events"
+              selectedCategory === "Outdated Events"
                 ? "text-white"
                 : "text-[#023f38]"
             }`}
           >
-            Expired Events
+            Outdated
           </Text>
         </Pressable>
 
@@ -100,27 +135,33 @@ export default function PostMajlis() {
                 : "text-[#023f38]"
             }`}
           >
-            Rejected Events
+            Rejected
           </Text>
         </Pressable>
       </View>
 
-      <Text className="mt-10 text-xl font-bold text-[#023f38]">
-        My Posted Majlis
+      <Text className="mt-10 text-xl font-bold text-[#023f38] mb-5">
+        Upcoming Events
       </Text>
 
       <MajlisCard
         item={sampleMajlis}
         onPress={() => {}}
-        onEdit={() => console.log("Edit event")}
+        onEdit={() => router.push("./edit-event")}
       />
 
-      <Pressable
-        onPress={handleLogout}
-        className="mt-6 items-center rounded-xl bg-red-500 px-6 py-4"
-      >
-        <Text className="font-bold text-white">Logout</Text>
-      </Pressable>
+      <MajlisCard
+        item={sampleMajlis}
+        onPress={() => {}}
+        onEdit={() => router.push("./edit-event")}
+      />
+
+      <MajlisCard
+        item={sampleMajlis}
+        onPress={() => {}}
+        onEdit={() => router.push("./edit-event")}
+      />
+
     </View>
   );
 }

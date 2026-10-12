@@ -85,7 +85,7 @@ export default function MajlisAlertDetail() {
           </Text>
 
           <View className="flex-row mt-7">
-            {/* Category */}
+
             <View className="flex-1 items-center px-1">
               <MaterialCommunityIcons
                 name="bookmark-outline"
@@ -105,7 +105,7 @@ export default function MajlisAlertDetail() {
 
             <View className="w-px bg-[#e5d7c2]" />
 
-            {/* Time */}
+
             <View className="flex-1 items-center px-1">
               <MaterialCommunityIcons
                 name="clock-outline"
@@ -122,7 +122,6 @@ export default function MajlisAlertDetail() {
 
             <View className="w-px bg-[#e5d7c2]" />
 
-            {/* Date */}
             <View className="flex-1 items-center px-1">
               <MaterialCommunityIcons
                 name="calendar-month-outline"
@@ -142,7 +141,6 @@ export default function MajlisAlertDetail() {
 
             <View className="w-px bg-[#e5d7c2]" />
 
-            {/* Distance */}
             <View className="flex-1 items-center px-1">
               <MaterialCommunityIcons
                 name="navigation-variant-outline"
@@ -158,7 +156,6 @@ export default function MajlisAlertDetail() {
             </View>
           </View>
 
-          {/* Location */}
           <View className="flex-row items-start mt-9">
             <View className="w-11 h-11 rounded-full bg-[#e8f1ee] items-center justify-center">
               <MaterialCommunityIcons

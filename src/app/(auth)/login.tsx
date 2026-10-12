@@ -45,7 +45,7 @@ export default function Login() {
 
       console.log("Current user:", user.email);
 
-      router.push("/post-majlis");
+      router.push("/post-event");
     } catch (error) {
       console.log("Login error:", error);
 
