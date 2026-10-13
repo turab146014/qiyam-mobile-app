@@ -1,4 +1,4 @@
-import { Pressable, View, Text } from "react-native";
+import { Pressable, View,ScrollView , Text } from "react-native";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { account } from "../services/appwrite";
@@ -24,6 +24,8 @@ export default function PostMajlis() {
     loadUser();
   }, []);
   const [selectedCategory, setSelectedCategory] = useState("Upcoming Events");
+
+  const [selectedStatus, setSelectedStatus] = useState("Upcoming");
 
   const sampleMajlis = {
     id: 1,
@@ -52,7 +54,14 @@ export default function PostMajlis() {
     }
   };
   return (
-    <View className="flex-1 bg-[#fdf9f4] px-5 pt-16">
+    <ScrollView
+    className="flex-1 bg-[#fdf9f4]"
+    contentContainerStyle={{
+      paddingHorizontal: 20,
+      paddingTop: 64,
+      paddingBottom: 40,
+    }}
+  >
       <View className="flex-row items-start justify-between">
         <View>
           <Text className="text-3xl font-bold text-[#023f38]">Hello,</Text>
@@ -81,67 +90,37 @@ export default function PostMajlis() {
         <Text className="font-bold text-white">+ Create New Event</Text>
       </Pressable>
 
-      <View className="mt-8 flex-row gap-2">
-        <Pressable
-          onPress={() => setSelectedCategory("Upcoming Events")}
-          className={`flex-1 rounded-xl px-3 py-3 ${
-            selectedCategory === "Upcoming Events"
-              ? "bg-[#0b6b5a]"
-              : "bg-white border border-[#d6a85c]"
-          }`}
-        >
-          <Text
-            className={`text-center text-sm font-bold ${
-              selectedCategory === "Upcoming Events"
-                ? "text-white"
-                : "text-[#023f38]"
+      <View className="mt-6 flex-row gap-3">
+        {["Upcoming", "Outdated", "Rejected"].map((status) => (
+          <Pressable
+            key={status}
+            onPress={() => setSelectedStatus(status)}
+            className={`flex-1 flex-row items-center justify-center rounded-xl border px-2 py-3 ${
+              selectedStatus === status
+                ? "border-[#0b6b5a] bg-[#0b6b5a]"
+                : "border-[#d6a85c] bg-white"
             }`}
           >
-            Upcoming
-          </Text>
-        </Pressable>
+            <Text
+              className={`font-bold ${
+                selectedStatus === status ? "text-white" : "text-[#023f38]"
+              }`}
+            >
+              {status}
+            </Text>
 
-        <Pressable
-          onPress={() => setSelectedCategory("Outdated Events")}
-          className={`flex-1 rounded-xl px-3 py-3 ${
-            selectedCategory === "Outdated Events"
-              ? "bg-[#0b6b5a]"
-              : "bg-white border border-[#d6a85c]"
-          }`}
-        >
-          <Text
-            className={`text-center text-sm font-bold ${
-              selectedCategory === "Outdated Events"
-                ? "text-white"
-                : "text-[#023f38]"
-            }`}
-          >
-            Outdated
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setSelectedCategory("Rejected Events")}
-          className={`flex-1 rounded-xl px-3 py-3 ${
-            selectedCategory === "Rejected Events"
-              ? "bg-[#0b6b5a]"
-              : "bg-white border border-[#d6a85c]"
-          }`}
-        >
-          <Text
-            className={`text-center text-sm font-bold ${
-              selectedCategory === "Rejected Events"
-                ? "text-white"
-                : "text-[#023f38]"
-            }`}
-          >
-            Rejected
-          </Text>
-        </Pressable>
+            <MaterialCommunityIcons
+              name="chevron-down"
+              size={18}
+              color={selectedStatus === status ? "white" : "#023f38"}
+              style={{ marginLeft: 4 }}
+            />
+          </Pressable>
+        ))}
       </View>
 
-      <Text className="mt-10 text-xl font-bold text-[#023f38] mb-5">
-        Upcoming Events
+      <Text className="mt-10 mb-5 text-2xl font-bold text-[#023f38]">
+        {selectedStatus} Events
       </Text>
 
       <MajlisCard
@@ -161,7 +140,6 @@ export default function PostMajlis() {
         onPress={() => {}}
         onEdit={() => router.push("./edit-event")}
       />
-
-    </View>
+    </ScrollView>
   );
 }

@@ -12,25 +12,33 @@ import { categories } from "../constants/majlis";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Location from "expo-location";
+import { uploadMajlisPoster } from "../services/storageService";
+import { createMajlis } from "../services/majlisService";
 
 export default function CreateMajlis() {
   const router = useRouter();
+
   const [title, setTitle] = useState("");
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] =
+    useState<ImagePicker.ImagePickerAsset | null>(null);
+
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showCategories, setShowCategories] = useState(false);
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
+
   const [location, setLocation] = useState("");
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
 
   const handlePickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permission =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
+      console.log("Media library permission is required");
       return;
     }
 
@@ -41,23 +49,103 @@ export default function CreateMajlis() {
     });
 
     if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
+      setSelectedImage(result.assets[0]);
     }
   };
 
-  const handleCreateEvent = () => {
+  const handleCreateEvent = async () => {
+    if (!selectedImage) {
+      console.log("Event image is required");
+      return;
+    }
+
+    if (!title.trim()) {
+      console.log("Event title is required");
+      return;
+    }
+
+    if (!selectedCategory) {
+      console.log("Category is required");
+      return;
+    }
+
+    if (!location.trim()) {
+      console.log("Event location is required");
+      return;
+    }
+
+    const permission =
+      await Location.requestForegroundPermissionsAsync();
+
+    if (!permission.granted) {
+      console.log("Location permission is required");
+      return;
+    }
+
+    const results = await Location.geocodeAsync(location.trim());
+
+    if (results.length === 0) {
+      console.log("Unable to find this location");
+      return;
+    }
+
+    const eventLatitude = results[0].latitude;
+    const eventLongitude = results[0].longitude;
+
+    console.log("Event latitude:", eventLatitude);
+    console.log("Event longitude:", eventLongitude);
+
+    const uploadedPoster = await uploadMajlisPoster(selectedImage);
+
+    console.log("Uploaded poster:", uploadedPoster);
+    console.log("Poster file ID:", uploadedPoster.$id);
+
+    const eventDateTime = new Date(selectedDate);
+
+    eventDateTime.setHours(
+      selectedTime.getHours(),
+      selectedTime.getMinutes(),
+      0,
+      0,
+    );
+
     const eventData = {
-      title: title.trim(),
+      name: title.trim(),
+
       category: selectedCategory,
-      date: selectedDate,
-      time: selectedTime,
+
+      time: selectedTime.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+
+      date: selectedDate.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      }),
+
       location: location.trim(),
-      latitude,
-      longitude,
-      image: selectedImage,
+
+      description: "",
+
+      latitude: eventLatitude,
+
+      longitude: eventLongitude,
+
+      timeOrder: eventDateTime.getTime(),
+
+      posterFileId: uploadedPoster.$id,
+
+      dateValue: eventDateTime.toISOString(),
     };
 
-    console.log("Event data:", eventData);
+    console.log("Majlis data:", eventData);
+
+    const createdMajlis = await createMajlis(eventData);
+
+    console.log("Created Majlis:", createdMajlis);
+    router.back();
   };
 
   return (
@@ -78,7 +166,9 @@ export default function CreateMajlis() {
       </Text>
 
       <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Event Image</Text>
+        <Text className="mb-2 font-semibold text-gray-800">
+          Event Image
+        </Text>
 
         <Pressable
           onPress={handlePickImage}
@@ -86,7 +176,7 @@ export default function CreateMajlis() {
         >
           {selectedImage ? (
             <Image
-              source={{ uri: selectedImage }}
+              source={{ uri: selectedImage.uri }}
               className="h-full w-full rounded-2xl"
               resizeMode="cover"
             />
@@ -105,7 +195,9 @@ export default function CreateMajlis() {
       </View>
 
       <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Title</Text>
+        <Text className="mb-2 font-semibold text-gray-800">
+          Title
+        </Text>
 
         <TextInput
           value={title}
@@ -117,7 +209,9 @@ export default function CreateMajlis() {
       </View>
 
       <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Category</Text>
+        <Text className="mb-2 font-semibold text-gray-800">
+          Category
+        </Text>
 
         <Pressable
           onPress={() => setShowCategories(!showCategories)}
@@ -141,7 +235,9 @@ export default function CreateMajlis() {
                   }}
                   className="border-b border-gray-200 px-4 py-3"
                 >
-                  <Text className="text-[#023f38]">{category}</Text>
+                  <Text className="text-[#023f38]">
+                    {category}
+                  </Text>
                 </Pressable>
               ))}
           </View>
@@ -149,7 +245,9 @@ export default function CreateMajlis() {
       </View>
 
       <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Date</Text>
+        <Text className="mb-2 font-semibold text-gray-800">
+          Date
+        </Text>
 
         <Pressable
           onPress={() => setShowDatePicker(true)}
@@ -177,7 +275,9 @@ export default function CreateMajlis() {
       </View>
 
       <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Time</Text>
+        <Text className="mb-2 font-semibold text-gray-800">
+          Time
+        </Text>
 
         <Pressable
           onPress={() => setShowTimePicker(true)}
@@ -208,12 +308,14 @@ export default function CreateMajlis() {
       </View>
 
       <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Location</Text>
+        <Text className="mb-2 font-semibold text-gray-800">
+          Location
+        </Text>
 
         <TextInput
           value={location}
           onChangeText={setLocation}
-          placeholder="Enter an event location "
+          placeholder="Enter an event location"
           placeholderTextColor="#6B7280"
           className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4 text-gray-700"
         />
@@ -224,14 +326,18 @@ export default function CreateMajlis() {
           className="flex-1 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
           onPress={handleCreateEvent}
         >
-          <Text className="font-bold text-white">Create</Text>
+          <Text className="font-bold text-white">
+            Create
+          </Text>
         </Pressable>
 
         <Pressable
           className="flex-1 items-center rounded-xl border border-[#d6a85c] bg-white px-6 py-4"
           onPress={() => router.back()}
         >
-          <Text className="font-bold text-[#023f38]">Discard</Text>
+          <Text className="font-bold text-[#023f38]">
+            Discard
+          </Text>
         </Pressable>
       </View>
     </ScrollView>
