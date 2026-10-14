@@ -14,6 +14,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Location from "expo-location";
 import { uploadMajlisPoster } from "../services/storageService";
 import { createMajlis } from "../services/majlisService";
+import { account } from "../services/appwrite";
 
 export default function CreateMajlis() {
   const router = useRouter();
@@ -109,7 +110,9 @@ export default function CreateMajlis() {
       0,
     );
 
+    const user = await account.get();
     const eventData = {
+      userId: user.$id,
       name: title.trim(),
 
       category: selectedCategory,

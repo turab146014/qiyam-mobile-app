@@ -64,6 +64,9 @@ export default function MajlisAlertDetail() {
           imageStyle={{
             borderRadius: 16,
           }}
+          onError={(event) => {
+            console.log("Poster image error:", event.nativeEvent.error);
+          }}
         />
         <Pressable
           onPress={() => setIsPosterFullScreen(true)}
@@ -85,7 +88,6 @@ export default function MajlisAlertDetail() {
           </Text>
 
           <View className="flex-row mt-7">
-
             <View className="flex-1 items-center px-1">
               <MaterialCommunityIcons
                 name="bookmark-outline"
@@ -104,7 +106,6 @@ export default function MajlisAlertDetail() {
             </View>
 
             <View className="w-px bg-[#e5d7c2]" />
-
 
             <View className="flex-1 items-center px-1">
               <MaterialCommunityIcons
@@ -231,7 +232,6 @@ export default function MajlisAlertDetail() {
           </Pressable>
         </View>
       </Modal>
-
     </SafeAreaView>
   );
 }

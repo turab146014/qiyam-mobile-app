@@ -1,5 +1,6 @@
 export type Majlis = {
   id: number;
+  rowId?: string;
   name: string;
   category: string;
   time: string;
@@ -13,4 +14,3 @@ export type Majlis = {
   longitude: number;
   posterFileId: string;
 };
-

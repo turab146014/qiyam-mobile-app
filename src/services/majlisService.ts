@@ -1,16 +1,18 @@
-import { ID } from "react-native-appwrite";
+import { ID, Query } from "react-native-appwrite";
 import { appwriteConfig, tablesDB } from "./appwrite";
 import type { Majlis } from "../types/majlis";
 
-export const getMajlisRows = async (): Promise<Majlis[]> => {
+export const getMajlisRows = async (userId?: string): Promise<Majlis[]> => {
   try {
     const response = await tablesDB.listRows({
       databaseId: appwriteConfig.databaseId,
       tableId: appwriteConfig.majlisTableId,
+      queries: userId ? [Query.equal("userId", userId)] : [],
     });
 
     const majlisRows: Majlis[] = response.rows.map((row: any) => ({
       id: Number(row.$sequence),
+      rowId: row.$id,
       name: row.name,
       category: row.category,
       time: row.time,
@@ -33,6 +35,7 @@ export const getMajlisRows = async (): Promise<Majlis[]> => {
 };
 
 export type CreateMajlisData = {
+  userId: string;
   name: string;
   category: string;
   time: string;
@@ -60,6 +63,50 @@ export const createMajlis = async (data: CreateMajlisData) => {
     return response;
   } catch (error) {
     console.log("Error creating Majlis:", error);
+    throw error;
+  }
+};
+
+
+export const getMajlisById = async (rowId: string) => {
+  try {
+    const majlis = await tablesDB.getRow({
+      databaseId: appwriteConfig.databaseId,
+      tableId: appwriteConfig.majlisTableId,
+      rowId: rowId,
+    });
+
+    return majlis;
+  } catch (error) {
+    console.log("Error fetching selected Majlis:", error);
+    throw error;
+  }
+};
+
+
+export const updateMajlis = async (
+  rowId: string,
+  updatedData: {
+    name: string;
+    category: string;
+    location: string;
+    date: string;
+    time: string;
+    dateValue: string;
+    timeOrder: number;
+  }
+) => {
+  try {
+    const response = await tablesDB.updateRow({
+      databaseId: appwriteConfig.databaseId,
+      tableId: appwriteConfig.majlisTableId,
+      rowId: rowId,
+      data: updatedData,
+    });
+
+    return response;
+  } catch (error) {
+    console.log("Error updating Majlis:", error);
     throw error;
   }
 };

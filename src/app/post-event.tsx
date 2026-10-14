@@ -1,47 +1,21 @@
-import { Pressable, View,ScrollView , Text } from "react-native";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { Pressable, View, ScrollView, Text } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import { account } from "../services/appwrite";
 import { logoutAccount } from "../services/auth/authService";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { getMajlisRows } from "../services/majlisService";
+import { Majlis } from "../types/majlis";
 import MajlisCard from "../components/majlis-card";
 
 export default function PostMajlis() {
   const router = useRouter();
+
   const [userName, setUserName] = useState("");
+  const [majalis, setMajalis] = useState<Majlis[]>([]);
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const user = await account.get();
-
-        setUserName(user.name);
-      } catch (error) {
-        console.log("Unable to get user:", error);
-      }
-    };
-
-    loadUser();
-  }, []);
   const [selectedCategory, setSelectedCategory] = useState("Upcoming Events");
-
   const [selectedStatus, setSelectedStatus] = useState("Upcoming");
-
-  const sampleMajlis = {
-    id: 1,
-    name: "Majlis e Aza Imam Hussain (A.S)",
-    category: "Gents Majlis",
-    time: "8:30 PM",
-    date: "10 October 2026",
-    dateValue: "2026-10-10",
-    location: "Lahore, Pakistan",
-    distance: "3.5 km",
-    distanceKm: 3.5,
-    timeOrder: 1,
-    latitude: 31.5204,
-    longitude: 74.3587,
-    posterFileId: "",
-  };
 
   const handleLogout = async () => {
     try {
@@ -53,15 +27,66 @@ export default function PostMajlis() {
       console.log("Logout error:", error);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      const loadMajalis = async () => {
+        try {
+          const user = await account.get();
+
+          const rows = await getMajlisRows(user.$id);
+
+          if (!isActive) return;
+
+          setUserName(user.name);
+          setMajalis(rows);
+
+          if (rows.length === 0) {
+            console.log("No majlis found");
+          } else {
+            console.log("Majalis loaded:", rows);
+          }
+        } catch (error) {
+          if (isActive) {
+            console.log("Unable to load Majalis:", error);
+          }
+        }
+      };
+
+      loadMajalis();
+
+      return () => {
+        isActive = false;
+      };
+    }, []),
+  );
+
+  const filteredMajalis = majalis.filter((item) => {
+    const eventTime = new Date(item.dateValue).getTime();
+    const currentTime = Date.now();
+
+    if (selectedStatus === "Upcoming") {
+      return eventTime > currentTime;
+    }
+
+    if (selectedStatus === "Outdated") {
+      return eventTime <= currentTime;
+    }
+
+    return false;
+  });
+
   return (
     <ScrollView
-    className="flex-1 bg-[#fdf9f4]"
-    contentContainerStyle={{
-      paddingHorizontal: 20,
-      paddingTop: 64,
-      paddingBottom: 40,
-    }}
-  >
+      className="flex-1 bg-[#fdf9f4]"
+      contentContainerStyle={{
+        paddingHorizontal: 20,
+        paddingTop: 64,
+        paddingBottom: 40,
+      }}
+    >
       <View className="flex-row items-start justify-between">
         <View>
           <Text className="text-3xl font-bold text-[#023f38]">Hello,</Text>
@@ -123,23 +148,27 @@ export default function PostMajlis() {
         {selectedStatus} Events
       </Text>
 
-      <MajlisCard
-        item={sampleMajlis}
-        onPress={() => {}}
-        onEdit={() => router.push("./edit-event")}
-      />
-
-      <MajlisCard
-        item={sampleMajlis}
-        onPress={() => {}}
-        onEdit={() => router.push("./edit-event")}
-      />
-
-      <MajlisCard
-        item={sampleMajlis}
-        onPress={() => {}}
-        onEdit={() => router.push("./edit-event")}
-      />
+      {filteredMajalis.length === 0 ? (
+        <Text className="mt-10 text-center text-gray-500">
+          No Majlis available
+        </Text>
+      ) : (
+        filteredMajalis.map((item) => (
+          <MajlisCard
+            key={item.id}
+            item={item}
+            onPress={() => {}}
+            onEdit={() =>
+              router.push({
+                pathname: "/edit-event",
+                params: {
+                  rowId: item.rowId!,
+                },
+              })
+            }
+          />
+        ))
+      )}
     </ScrollView>
   );
 }
