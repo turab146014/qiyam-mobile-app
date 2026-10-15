@@ -1,62 +1,88 @@
+import { useEffect, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
-  Image,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { categories } from "../constants/majlis";
-import { getMajlisById } from "../services/majlisService";
-import { appwriteConfig } from "../services/appwrite";
-import { updateMajlis } from "../services/majlisService";
 
-import DateTimePicker from "@react-native-community/datetimepicker";
-import * as ImagePicker from "expo-image-picker";
+import { categories } from "../constants/majlis";
+import { appwriteConfig } from "../services/appwrite";
+import {
+  deleteMajlis,
+  getMajlisById,
+  updateMajlis,
+} from "../services/majlisService";
+import { uploadMajlisPoster } from "../services/storageService";
 
 export default function EditEvent() {
   const router = useRouter();
+  const { rowId } = useLocalSearchParams<{ rowId: string }>();
 
   const [title, setTitle] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [showCategories, setShowCategories] = useState(false);
   const [location, setLocation] = useState("");
-  const { rowId } = useLocalSearchParams<{ rowId: string }>();
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
 
   const [posterFileId, setPosterFileId] = useState("");
-  const [newPosterUri, setNewPosterUri] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [newPoster, setNewPoster] =
+    useState<ImagePicker.ImagePickerAsset | null>(null);
+
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const [originalLocation, setOriginalLocation] = useState("");
+  const [latitude, setLatitude] = useState(0);
+  const [longitude, setLongitude] = useState(0);
+
+  const [showCategories, setShowCategories] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  console.log("Selected Majlis Row ID:", rowId);
+  const posterImageUrl = posterFileId
+    ? `${appwriteConfig.endpoint}/storage/buckets/${appwriteConfig.posterBucketId}/files/${posterFileId}/view?project=${appwriteConfig.projectId}`
+    : "";
+
+  const previewImageUri = newPoster?.uri || posterImageUrl;
 
   useEffect(() => {
     const loadMajlis = async () => {
-      try {
-        if (!rowId) {
-          console.log("Majlis row ID is missing");
-          return;
-        }
+      if (!rowId) {
+        console.warn("Majlis row ID is missing");
+        return;
+      }
 
+      try {
         const majlis = await getMajlisById(rowId);
+
         setTitle(majlis.name);
         setSelectedCategory(majlis.category);
         setLocation(majlis.location);
+
+        setOriginalLocation(majlis.location);
+        setLatitude(Number(majlis.latitude));
+        setLongitude(Number(majlis.longitude));
+
         setDate(majlis.date);
         setTime(majlis.time);
+
         if (majlis.dateValue) {
           setSelectedDate(new Date(majlis.dateValue));
         }
-        setPosterFileId(majlis.posterFileId ?? "");
 
-        console.log("Selected Majlis data:", majlis);
+        setPosterFileId(majlis.posterFileId ?? "");
       } catch (error) {
-        console.log("Unable to load selected Majlis:", error);
+        console.error("Unable to load selected Majlis:", error);
       }
     };
 
@@ -72,220 +98,317 @@ export default function EditEvent() {
     });
 
     if (!result.canceled && result.assets.length > 0) {
-      setNewPosterUri(result.assets[0].uri);
+      setNewPoster(result.assets[0]);
     }
   };
-
-  const posterImageUrl = posterFileId
-    ? `${appwriteConfig.endpoint}/storage/buckets/${appwriteConfig.posterBucketId}/files/${posterFileId}/view?project=${appwriteConfig.projectId}`
-    : "";
 
   const handleUpdateMajlis = async () => {
     if (!rowId) {
-      console.log("Majlis row ID is missing");
+      console.warn("Majlis row ID is missing");
       return;
     }
 
-    console.log("Selected Majlis ID:", rowId);
+    if (!title.trim() || !selectedCategory || !location.trim()) {
+      console.warn("Please fill all required fields");
+      return;
+    }
 
-    console.log("Edited form values:", {
-      title,
-      selectedCategory,
-      location,
-      date,
-      time,
-      selectedDate,
-    });
+    try {
+      let eventLatitude = latitude;
+      let eventLongitude = longitude;
+      let finalPosterFileId = posterFileId;
+
+      if (location.trim() !== originalLocation.trim()) {
+        const results = await Location.geocodeAsync(location.trim());
+
+        if (results.length === 0) {
+          console.warn("Unable to find this location");
+          return;
+        }
+
+        eventLatitude = results[0].latitude;
+        eventLongitude = results[0].longitude;
+      }
+
+      if (newPoster) {
+        const uploadedPoster = await uploadMajlisPoster(newPoster);
+        finalPosterFileId = uploadedPoster.$id;
+      }
+
+      const updatedData = {
+        name: title.trim(),
+        category: selectedCategory,
+        location: location.trim(),
+        date,
+        time,
+        dateValue: selectedDate.toISOString(),
+        timeOrder: selectedDate.getTime(),
+        posterFileId: finalPosterFileId,
+        latitude: eventLatitude,
+        longitude: eventLongitude,
+      };
+
+      await updateMajlis(rowId, updatedData);
+
+      router.back();
+    } catch (error) {
+      console.error("Error updating Majlis:", error);
+    }
+  };
+
+  const handleDeleteMajlis = () => {
+    if (!rowId) {
+      console.warn("Majlis row ID is missing");
+      return;
+    }
+
+    Alert.alert(
+      "Delete Majlis?",
+      "Are you sure you want to delete this Majlis?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteMajlis(rowId);
+              router.back();
+            } catch (error) {
+              console.error("Failed to delete Majlis:", error);
+
+              Alert.alert(
+                "Delete Failed",
+                "Unable to delete this Majlis. Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-[#fdf9f4]"
-      contentContainerStyle={{
-        paddingHorizontal: 20,
-        paddingTop: 64,
-        paddingBottom: 40,
-      }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={10}
     >
-      <Text className="text-3xl font-bold text-[#023f38] text-center">
-        Edit an Event
-      </Text>
+      <ScrollView
+        className="flex-1 bg-[#fdf9f4]"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 64,
+          paddingBottom: 40,
+        }}
+      >
+        <Text className="text-center text-3xl font-bold text-[#023f38]">
+          Edit an Event
+        </Text>
 
-      <Text className="mt-10 text-xl font-bold text-[#023f38]">
-        Event Details
-      </Text>
+        <Text className="mt-10 text-xl font-bold text-[#023f38]">
+          Event Details
+        </Text>
 
-      <View className="mt-6">
-        <Pressable
-          onPress={handlePickPoster}
-          className="h-44 overflow-hidden rounded-2xl border border-[#d6a85c] bg-white"
-        >
-          {newPosterUri || posterImageUrl ? (
-            <Image
-              source={{ uri: newPosterUri || posterImageUrl }}
-              className="h-full w-full"
-              resizeMode="contain"
-              onError={(event) => {
-                console.log(
-                  "Edit poster image error:",
-                  event.nativeEvent.error,
-                );
-              }}
-            />
-          ) : (
-            <View className="flex-1 items-center justify-center">
-              <Text className="text-gray-500">No poster available</Text>
+        <View className="mt-6">
+          <Text className="mb-2 font-semibold text-gray-800">Event Image</Text>
+
+          <Pressable
+            onPress={handlePickPoster}
+            className="h-80 overflow-hidden rounded-2xl border border-[#d6a85c] bg-white"
+          >
+            {previewImageUri ? (
+              <>
+                <Image
+                  source={{ uri: previewImageUri }}
+                  style={{
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                  }}
+                  resizeMode="cover"
+                  blurRadius={12}
+                />
+
+                <View className="flex-1 items-center justify-center bg-black/10 p-1">
+                  <Image
+                    source={{ uri: previewImageUri }}
+                    className="h-full w-full rounded-xl"
+                    resizeMode="contain"
+                  />
+                </View>
+              </>
+            ) : (
+              <View className="flex-1 items-center justify-center">
+                <MaterialCommunityIcons
+                  name="image-plus"
+                  size={42}
+                  color="#0b6b5a"
+                />
+
+                <Text className="mt-3 font-semibold text-[#0b6b5a]">
+                  Add Event Image
+                </Text>
+              </View>
+            )}
+          </Pressable>
+
+          <Text className="mt-2 text-center text-sm text-[#0b6b5a]">
+            Tap image to change poster
+          </Text>
+        </View>
+
+        <View className="mt-6">
+          <Text className="mb-2 font-semibold text-gray-800">Title</Text>
+
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Enter event title"
+            placeholderTextColor="#6B7280"
+            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4 text-gray-700"
+          />
+        </View>
+
+        <View className="mt-6">
+          <Text className="mb-2 font-semibold text-gray-800">Category</Text>
+
+          <Pressable
+            onPress={() => setShowCategories(!showCategories)}
+            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+          >
+            <Text className="text-gray-700">
+              {selectedCategory || "Select category"}
+            </Text>
+          </Pressable>
+
+          {showCategories && (
+            <View className="mt-2 rounded-xl border border-[#d6a85c] bg-white">
+              {categories
+                .filter((category) => category !== "All")
+                .map((category) => (
+                  <Pressable
+                    key={category}
+                    onPress={() => {
+                      setSelectedCategory(category);
+                      setShowCategories(false);
+                    }}
+                    className="border-b border-gray-200 px-4 py-3"
+                  >
+                    <Text className="text-[#023f38]">{category}</Text>
+                  </Pressable>
+                ))}
             </View>
           )}
-        </Pressable>
+        </View>
 
-        <Text className="mt-2 text-center text-sm text-[#0b6b5a]">
-          Tap image to change poster
-        </Text>
-      </View>
+        <View className="mt-6">
+          <Text className="mb-2 font-semibold text-gray-800">Date</Text>
 
-      <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Title</Text>
+          <Pressable
+            onPress={() => setShowDatePicker(true)}
+            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+          >
+            <Text className="text-gray-700">{date || "Select date"}</Text>
+          </Pressable>
 
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Enter event title"
-          placeholderTextColor="#6B7280"
-          className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4 text-gray-700"
-        />
-      </View>
+          {showDatePicker && (
+            <DateTimePicker
+              value={selectedDate}
+              mode="date"
+              display="default"
+              onValueChange={(event, newDate) => {
+                setShowDatePicker(false);
 
-      <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Category</Text>
+                if (newDate) {
+                  setSelectedDate(newDate);
 
-        <Pressable
-          onPress={() => setShowCategories(!showCategories)}
-          className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
-        >
-          <Text className="text-gray-700">
-            {selectedCategory || "Select category"}
-          </Text>
-        </Pressable>
+                  setDate(
+                    newDate.toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    }),
+                  );
+                }
+              }}
+              onDismiss={() => setShowDatePicker(false)}
+            />
+          )}
+        </View>
 
-        {showCategories && (
-          <View className="mt-2 rounded-xl border border-[#d6a85c] bg-white">
-            {categories
-              .filter((category) => category !== "All")
-              .map((category) => (
-                <Pressable
-                  key={category}
-                  onPress={() => {
-                    setSelectedCategory(category);
-                    setShowCategories(false);
-                  }}
-                  className="border-b border-gray-200 px-4 py-3"
-                >
-                  <Text className="text-[#023f38]">{category}</Text>
-                </Pressable>
-              ))}
-          </View>
-        )}
-      </View>
+        <View className="mt-6">
+          <Text className="mb-2 font-semibold text-gray-800">Time</Text>
 
-      <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Date</Text>
+          <Pressable
+            onPress={() => setShowTimePicker(true)}
+            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+          >
+            <Text className="text-gray-700">{time || "Select time"}</Text>
+          </Pressable>
 
-        <Pressable
-          onPress={() => setShowDatePicker(true)}
-          className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
-        >
-          <Text className="text-gray-700">{date || "Select date"}</Text>
-        </Pressable>
+          {showTimePicker && (
+            <DateTimePicker
+              value={selectedDate}
+              mode="time"
+              display="default"
+              onValueChange={(event, newTime) => {
+                setShowTimePicker(false);
 
-        {showDatePicker && (
-          <DateTimePicker
-            value={selectedDate}
-            mode="date"
-            display="default"
-            onValueChange={(event, newDate) => {
-              setShowDatePicker(false);
+                if (newTime) {
+                  const updatedDate = new Date(selectedDate);
 
-              if (newDate) {
-                setSelectedDate(newDate);
+                  updatedDate.setHours(newTime.getHours());
+                  updatedDate.setMinutes(newTime.getMinutes());
 
-                setDate(
-                  newDate.toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  }),
-                );
-              }
-            }}
-            onDismiss={() => setShowDatePicker(false)}
+                  setSelectedDate(updatedDate);
+
+                  setTime(
+                    updatedDate.toLocaleTimeString("en-US", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    }),
+                  );
+                }
+              }}
+              onDismiss={() => setShowTimePicker(false)}
+            />
+          )}
+        </View>
+
+        <View className="mt-6">
+          <Text className="mb-2 font-semibold text-gray-800">Location</Text>
+
+          <TextInput
+            value={location}
+            onChangeText={setLocation}
+            placeholder="Enter an event location"
+            placeholderTextColor="#6B7280"
+            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4 text-gray-700"
           />
-        )}
-      </View>
+        </View>
 
-      <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Time</Text>
+        <View className="mt-10 flex-row gap-3">
+          <Pressable
+            onPress={handleUpdateMajlis}
+            className="flex-1 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
+          >
+            <Text className="font-bold text-white">Submit</Text>
+          </Pressable>
 
-        <Pressable
-          onPress={() => setShowTimePicker(true)}
-          className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
-        >
-          <Text className="text-gray-700">{time || "Select time"}</Text>
-        </Pressable>
-
-        {showTimePicker && (
-          <DateTimePicker
-            value={selectedDate}
-            mode="time"
-            display="default"
-            onValueChange={(event, newTime) => {
-              setShowTimePicker(false);
-
-              if (newTime) {
-                const updatedDate = new Date(selectedDate);
-
-                updatedDate.setHours(newTime.getHours());
-                updatedDate.setMinutes(newTime.getMinutes());
-
-                setSelectedDate(updatedDate);
-
-                setTime(
-                  updatedDate.toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  }),
-                );
-              }
-            }}
-            onDismiss={() => setShowTimePicker(false)}
-          />
-        )}
-      </View>
-      <View className="mt-6">
-        <Text className="mb-2 font-semibold text-gray-800">Location</Text>
-
-        <TextInput
-          value={location}
-          onChangeText={setLocation}
-          placeholder="Enter an event location"
-          placeholderTextColor="#6B7280"
-          className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4 text-gray-700"
-        />
-      </View>
-
-      <View className="mt-10 flex-row gap-3">
-        <Pressable
-          className="flex-1 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
-          onPress={handleUpdateMajlis}
-        >
-          <Text className="font-bold text-white">Submit</Text>
-        </Pressable>
-
-        <Pressable className="flex-1 items-center rounded-xl bg-red-500 px-6 py-4">
-          <Text className="font-bold text-white">Delete</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+          <Pressable
+            onPress={handleDeleteMajlis}
+            className="flex-1 items-center rounded-xl bg-red-500 px-6 py-4"
+          >
+            <Text className="font-bold text-white">Delete</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

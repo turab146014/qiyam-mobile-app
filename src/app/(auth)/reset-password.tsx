@@ -1,18 +1,18 @@
-import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AuthButton from "../../components/auth/AuthButton";
 import PasswordInput from "../../components/auth/PasswordInput";
-import { getPasswordStrength } from "../../utils/auth/passwordStrength";
+
 import { resetPassword } from "../../services/auth/forgotPasswordService";
+import { getPasswordStrength } from "../../utils/auth/passwordStrength";
 
 export default function ResetPassword() {
   const router = useRouter();
-  const { email } = useLocalSearchParams<{
-    email?: string;
-  }>();
+  const { email } = useLocalSearchParams<{ email?: string }>();
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -25,6 +25,11 @@ export default function ResetPassword() {
   const handleResetPassword = async () => {
     setNewPasswordError("");
     setConfirmPasswordError("");
+
+    if (!email) {
+      setNewPasswordError("Email address is missing");
+      return;
+    }
 
     if (newPassword === "") {
       setNewPasswordError("New password is required");
@@ -47,13 +52,10 @@ export default function ResetPassword() {
     }
 
     try {
-      await resetPassword(email as string, newPassword);
-
-      console.log("Password reset successfully");
-
+      await resetPassword(email, newPassword);
       router.replace("/login");
     } catch (error) {
-      console.log("Password reset error:", error);
+      console.error("Password reset failed:", error);
 
       if (error instanceof Error) {
         setNewPasswordError(error.message);

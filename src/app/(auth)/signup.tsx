@@ -1,26 +1,17 @@
-import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import { useRouter } from "expo-router";
+import { KeyboardAvoidingView, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import AuthButton from "../../components/auth/AuthButton";
 import AuthInput from "../../components/auth/AuthInput";
 import PasswordInput from "../../components/auth/PasswordInput";
-import { getPasswordStrength } from "../../utils/auth/passwordStrength";
 
 import { createAccount } from "../../services/auth/authService";
-
 import { createOtpRecord } from "../../services/auth/otpService";
 import { generateOtp } from "../../utils/auth/generateOtp";
-
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { getPasswordStrength } from "../../utils/auth/passwordStrength";
 
 export default function SignUp() {
   const router = useRouter();
@@ -41,7 +32,6 @@ export default function SignUp() {
   const [cnicError, setCnicError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
-
   const [signupError, setSignupError] = useState("");
 
   const handleSignup = async () => {
@@ -117,8 +107,6 @@ export default function SignUp() {
         cnic,
       });
 
-      console.log("Account created:", user.$id);
-
       const otp = generateOtp();
 
       await createOtpRecord({
@@ -128,7 +116,6 @@ export default function SignUp() {
         purpose: "signup",
       });
 
-      console.log("OTP record created");
       router.push({
         pathname: "/verify-otp",
         params: {
@@ -138,7 +125,6 @@ export default function SignUp() {
       });
     } catch (error) {
       console.log("Signup error:", error);
-
       setSignupError("Unable to create account. Please try again.");
     }
   };
@@ -290,6 +276,7 @@ export default function SignUp() {
               {signupError}
             </Text>
           )}
+
           <AuthButton title="Sign Up" onPress={handleSignup} />
 
           <View className="mt-6 flex-row justify-center">

@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -7,7 +7,7 @@ import AuthButton from "../../components/auth/AuthButton";
 import AuthInput from "../../components/auth/AuthInput";
 import PasswordInput from "../../components/auth/PasswordInput";
 
-import { getCurrentUser, loginAccount } from "../../services/auth/authService";
+import { loginAccount } from "../../services/auth/authService";
 
 export default function Login() {
   const router = useRouter();
@@ -18,7 +18,6 @@ export default function Login() {
 
   const [identifierError, setIdentifierError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
   const [loginError, setLoginError] = useState("");
 
   const handleSignIn = async () => {
@@ -37,18 +36,11 @@ export default function Login() {
     }
 
     try {
-      const session = await loginAccount(identifier, password);
-
-      console.log("Login successful:", session.$id);
-
-      const user = await getCurrentUser();
-
-      console.log("Current user:", user.email);
+      await loginAccount(identifier, password);
 
       router.push("/post-event");
     } catch (error) {
-      console.log("Login error:", error);
-
+      console.error("Login failed:", error);
       setLoginError("Unable to sign in. Please check your email and password.");
     }
   };

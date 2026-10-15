@@ -1,14 +1,12 @@
 import { ID, Query, ExecutionMethod } from "react-native-appwrite";
-
 import { tablesDB, functions, appwriteConfig } from "../appwrite";
-
 import { generateOtp } from "../../utils/auth/generateOtp";
 
 type CreateOtpParams = {
   userId: string;
   email: string;
   otp: string;
-  purpose : string;
+  purpose: string;
 };
 
 export const createOtpRecord = async ({
@@ -17,7 +15,7 @@ export const createOtpRecord = async ({
   otp,
   purpose,
 }: CreateOtpParams) => {
-  return await tablesDB.createRow({
+  return tablesDB.createRow({
     databaseId: appwriteConfig.databaseId,
     tableId: appwriteConfig.otpTableId,
     rowId: ID.unique(),
@@ -38,12 +36,12 @@ export const verifyOtp = async (email: string, enteredOtp: string) => {
     tableId: appwriteConfig.otpTableId,
     queries: [Query.equal("email", email.trim())],
   });
+
   if (response.rows.length === 0) {
     throw new Error("OTP record not found");
   }
 
   const otpRecord = response.rows[0];
-
   const isExpired = new Date(otpRecord.expiresAt) < new Date();
 
   if (isExpired) {
@@ -101,7 +99,6 @@ export const resendOtp = async (email: string) => {
   }
 
   const otpRecord = response.rows[0];
-
   const newOtp = generateOtp();
 
   await tablesDB.updateRow({

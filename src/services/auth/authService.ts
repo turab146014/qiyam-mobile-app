@@ -16,15 +16,17 @@ export const createAccount = async ({
   phone,
   cnic,
 }: CreateAccountParams) => {
+  const trimmedEmail = email.trim();
+
   const user = await account.create({
     userId: ID.unique(),
-    email: email.trim(),
+    email: trimmedEmail,
     password,
     name: username.trim(),
   });
 
   await account.createEmailPasswordSession({
-    email: email.trim(),
+    email: trimmedEmail,
     password,
   });
 
@@ -43,27 +45,25 @@ export const createAccount = async ({
 };
 
 export const loginAccount = async (email: string, password: string) => {
-  return await account.createEmailPasswordSession({
+  return account.createEmailPasswordSession({
     email: email.trim(),
     password,
   });
 };
 
 export const getCurrentUser = async () => {
-  return await account.get();
+  return account.get();
 };
 
 export const logoutAccount = async () => {
-  return await account.deleteSession({
+  return account.deleteSession({
     sessionId: "current",
   });
 };
 
 export const checkSession = async () => {
   try {
-    const user = await getCurrentUser();
-
-    return user;
+    return await getCurrentUser();
   } catch {
     return null;
   }

@@ -1,4 +1,4 @@
-import { TextInput, type TextInputProps, } from "react-native";
+import { TextInput, type TextInputProps } from "react-native";
 
 type AuthInputProps = {
   value: string;

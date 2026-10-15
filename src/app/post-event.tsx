@@ -1,32 +1,20 @@
-import { Pressable, View, ScrollView, Text } from "react-native";
+import { useCallback, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+
+import MajlisCard from "../components/majlis-card";
 import { account } from "../services/appwrite";
 import { logoutAccount } from "../services/auth/authService";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { getMajlisRows } from "../services/majlisService";
-import { Majlis } from "../types/majlis";
-import MajlisCard from "../components/majlis-card";
+import { deleteMajlis, getMajlisRows } from "../services/majlisService";
+import type { Majlis } from "../types/majlis";
 
 export default function PostMajlis() {
   const router = useRouter();
 
   const [userName, setUserName] = useState("");
   const [majalis, setMajalis] = useState<Majlis[]>([]);
-
-  const [selectedCategory, setSelectedCategory] = useState("Upcoming Events");
   const [selectedStatus, setSelectedStatus] = useState("Upcoming");
-
-  const handleLogout = async () => {
-    try {
-      await logoutAccount();
-
-      console.log("Logout successful");
-      router.replace("/login");
-    } catch (error) {
-      console.log("Logout error:", error);
-    }
-  };
 
   useFocusEffect(
     useCallback(() => {
@@ -35,22 +23,15 @@ export default function PostMajlis() {
       const loadMajalis = async () => {
         try {
           const user = await account.get();
-
           const rows = await getMajlisRows(user.$id);
 
           if (!isActive) return;
 
           setUserName(user.name);
           setMajalis(rows);
-
-          if (rows.length === 0) {
-            console.log("No majlis found");
-          } else {
-            console.log("Majalis loaded:", rows);
-          }
         } catch (error) {
           if (isActive) {
-            console.log("Unable to load Majalis:", error);
+            console.error("Unable to load Majalis:", error);
           }
         }
       };
@@ -78,6 +59,48 @@ export default function PostMajlis() {
     return false;
   });
 
+  const handleLogout = async () => {
+    try {
+      await logoutAccount();
+      router.replace("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  const handleDeleteMajlis = (rowId: string) => {
+    Alert.alert(
+      "Delete Majlis?",
+      "Are you sure you want to delete this Majlis?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteMajlis(rowId);
+
+              setMajalis((previous) =>
+                previous.filter((item) => item.rowId !== rowId),
+              );
+            } catch (error) {
+              console.error("Delete failed:", error);
+
+              Alert.alert(
+                "Delete Failed",
+                "Unable to delete this Majlis. Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <ScrollView
       className="flex-1 bg-[#fdf9f4]"
@@ -102,15 +125,15 @@ export default function PostMajlis() {
 
         <Pressable
           onPress={handleLogout}
-          className="ml-4 h-11 w-11 items-center justify-center bg-[#ffd5d5] rounded-full"
+          className="ml-4 h-11 w-11 items-center justify-center rounded-full bg-[#ffd5d5]"
         >
           <MaterialCommunityIcons name="logout" size={20} color="red" />
         </Pressable>
       </View>
 
       <Pressable
-        className="mt-12 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
         onPress={() => router.push("/create-event")}
+        className="mt-12 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
       >
         <Text className="font-bold text-white">+ Create New Event</Text>
       </Pressable>
@@ -144,7 +167,7 @@ export default function PostMajlis() {
         ))}
       </View>
 
-      <Text className="mt-10 mb-5 text-2xl font-bold text-[#023f38]">
+      <Text className="mb-5 mt-10 text-2xl font-bold text-[#023f38]">
         {selectedStatus} Events
       </Text>
 
@@ -157,15 +180,26 @@ export default function PostMajlis() {
           <MajlisCard
             key={item.id}
             item={item}
+            showDistance={false}
             onPress={() => {}}
-            onEdit={() =>
+            onEdit={() => {
+              if (!item.rowId) return;
+
               router.push({
                 pathname: "/edit-event",
                 params: {
-                  rowId: item.rowId!,
+                  rowId: item.rowId,
                 },
-              })
-            }
+              });
+            }}
+            onDelete={() => {
+              if (!item.rowId) {
+                Alert.alert("Error", "Majlis ID is missing.");
+                return;
+              }
+
+              handleDeleteMajlis(item.rowId);
+            }}
           />
         ))
       )}

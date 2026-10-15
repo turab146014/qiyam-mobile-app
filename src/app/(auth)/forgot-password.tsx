@@ -1,11 +1,12 @@
-import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useRouter } from "expo-router";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { sendForgotPasswordOtp } from "../../services/auth/forgotPasswordService";
 
 import AuthButton from "../../components/auth/AuthButton";
 import AuthInput from "../../components/auth/AuthInput";
+
+import { sendForgotPasswordOtp } from "../../services/auth/forgotPasswordService";
 
 export default function ForgotPassword() {
   const router = useRouter();
@@ -33,9 +34,6 @@ export default function ForgotPassword() {
     try {
       const execution = await sendForgotPasswordOtp(trimmedEmail);
 
-      console.log("Function execution:", execution);
-      console.log("Function response:", execution.responseBody);
-
       if (execution.responseStatusCode !== 200) {
         throw new Error("Forgot password function failed");
       }
@@ -48,7 +46,7 @@ export default function ForgotPassword() {
         },
       });
     } catch (error) {
-      console.log("Send OTP error:", error);
+      console.error("Send OTP failed:", error);
       setEmailError("Unable to send OTP. Please try again.");
     }
   };

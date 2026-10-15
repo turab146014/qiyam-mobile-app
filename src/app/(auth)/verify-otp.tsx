@@ -1,5 +1,5 @@
+import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useEffect } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -27,6 +27,18 @@ export default function VerifyOtp() {
 
   const verificationTarget = phone ?? email;
 
+  useEffect(() => {
+    if (resendTimer === 0) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setResendTimer((previous) => previous - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [resendTimer]);
+
   const handleVerifyOtp = async () => {
     setOtpError("");
 
@@ -47,8 +59,6 @@ export default function VerifyOtp() {
         await verifyOtp(email as string, otp);
       }
 
-      console.log("OTP verified successfully");
-
       if (purpose === "signup") {
         router.replace("/login");
       }
@@ -62,7 +72,7 @@ export default function VerifyOtp() {
         });
       }
     } catch (error) {
-      console.log("OTP verification error:", error);
+      console.error("OTP verification failed:", error);
 
       if (error instanceof Error) {
         setOtpError(error.message);
@@ -76,29 +86,15 @@ export default function VerifyOtp() {
     try {
       setLoadingResend(true);
 
-      const newOtp = await resendOtp(email as string);
-
-      console.log("New OTP:", newOtp);
+      await resendOtp(email as string);
 
       setResendTimer(60);
     } catch (error) {
-      console.log("Resend OTP error:", error);
+      console.error("Resend OTP failed:", error);
     } finally {
       setLoadingResend(false);
     }
   };
-
-  useEffect(() => {
-    if (resendTimer === 0) {
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setResendTimer((previous) => previous - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [resendTimer]);
 
   return (
     <SafeAreaView className="flex-1 bg-[#fdf9f4]">

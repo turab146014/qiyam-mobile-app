@@ -1,5 +1,11 @@
 import "react-native-url-polyfill/auto";
-import { Client, Account, TablesDB, Functions, Storage } from "react-native-appwrite";
+import {
+  Client,
+  Account,
+  TablesDB,
+  Functions,
+  Storage,
+} from "react-native-appwrite";
 
 export const appwriteConfig = {
   endpoint: "https://syd.cloud.appwrite.io/v1",
@@ -13,14 +19,12 @@ export const appwriteConfig = {
   verifyForgotPasswordFunctionId: "6abcfa6600094517dd39",
 };
 
-const client = new Client();
-
-client
+const client = new Client()
   .setEndpoint(appwriteConfig.endpoint)
   .setProject(appwriteConfig.projectId)
   .setPlatform(appwriteConfig.platform);
 
-export const tablesDB = new TablesDB(client);
 export const account = new Account(client);
+export const tablesDB = new TablesDB(client);
 export const functions = new Functions(client);
 export const storage = new Storage(client);

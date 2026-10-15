@@ -1,9 +1,8 @@
 import { ExecutionMethod } from "react-native-appwrite";
-
 import { functions, appwriteConfig } from "../appwrite";
 
 export const sendForgotPasswordOtp = async (email: string) => {
-  return await functions.createExecution({
+  return functions.createExecution({
     functionId: appwriteConfig.forgotPasswordFunctionId,
     body: JSON.stringify({
       email: email.trim(),
@@ -16,11 +15,7 @@ export const sendForgotPasswordOtp = async (email: string) => {
   });
 };
 
-
-export const resetPassword = async (
-  email: string,
-  newPassword: string,
-) => {
+export const resetPassword = async (email: string, newPassword: string) => {
   const execution = await functions.createExecution({
     functionId: appwriteConfig.verifyForgotPasswordFunctionId,
     body: JSON.stringify({
@@ -28,8 +23,8 @@ export const resetPassword = async (
       email: email.trim(),
       newPassword,
     }),
-    async: false,
     method: ExecutionMethod.POST,
+    async: false,
   });
 
   const result = JSON.parse(execution.responseBody);

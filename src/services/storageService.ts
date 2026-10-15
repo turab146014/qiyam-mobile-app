@@ -1,7 +1,7 @@
-import { ID } from "react-native-appwrite";
 import * as ImagePicker from "expo-image-picker";
+import { ID } from "react-native-appwrite";
 
-import { storage, appwriteConfig } from "./appwrite";
+import { appwriteConfig, storage } from "./appwrite";
 
 export const uploadMajlisPoster = async (
   image: ImagePicker.ImagePickerAsset,
@@ -12,7 +12,7 @@ export const uploadMajlisPoster = async (
     throw new Error("Image file size is unavailable");
   }
 
-  const uploadedFile = await storage.createFile({
+  return storage.createFile({
     bucketId: appwriteConfig.posterBucketId,
     fileId: ID.unique(),
     file: {
@@ -22,6 +22,4 @@ export const uploadMajlisPoster = async (
       uri: image.uri,
     },
   });
-
-  return uploadedFile;
 };
