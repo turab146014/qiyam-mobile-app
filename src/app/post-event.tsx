@@ -8,6 +8,7 @@ import { account } from "../services/appwrite";
 import { logoutAccount } from "../services/auth/authService";
 import { deleteMajlis, getMajlisRows } from "../services/majlisService";
 import type { Majlis } from "../types/majlis";
+import DeleteConfirmModal from "../components/DeleteConfirmModal";
 
 export default function PostMajlis() {
   const router = useRouter();
@@ -15,6 +16,9 @@ export default function PostMajlis() {
   const [userName, setUserName] = useState("");
   const [majalis, setMajalis] = useState<Majlis[]>([]);
   const [selectedStatus, setSelectedStatus] = useState("Upcoming");
+
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedMajlisId, setSelectedMajlisId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -69,36 +73,30 @@ export default function PostMajlis() {
   };
 
   const handleDeleteMajlis = (rowId: string) => {
-    Alert.alert(
-      "Delete Majlis?",
-      "Are you sure you want to delete this Majlis?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteMajlis(rowId);
+    setSelectedMajlisId(rowId);
+    setDeleteModalVisible(true);
+  };
 
-              setMajalis((previous) =>
-                previous.filter((item) => item.rowId !== rowId),
-              );
-            } catch (error) {
-              console.error("Delete failed:", error);
+  const confirmDeleteMajlis = async () => {
+    if (!selectedMajlisId) return;
 
-              Alert.alert(
-                "Delete Failed",
-                "Unable to delete this Majlis. Please try again.",
-              );
-            }
-          },
-        },
-      ],
-    );
+    try {
+      await deleteMajlis(selectedMajlisId);
+
+      setMajalis((previous) =>
+        previous.filter((item) => item.rowId !== selectedMajlisId),
+      );
+
+      setDeleteModalVisible(false);
+      setSelectedMajlisId(null);
+    } catch (error) {
+      console.error("Failed to delete Majlis:", error);
+
+      Alert.alert(
+        "Delete Failed",
+        "Unable to delete this Majlis. Please try again.",
+      );
+    }
   };
 
   return (
@@ -203,6 +201,15 @@ export default function PostMajlis() {
           />
         ))
       )}
+
+      <DeleteConfirmModal
+        visible={deleteModalVisible}
+        onCancel={() => {
+          setDeleteModalVisible(false);
+          setSelectedMajlisId(null);
+        }}
+        onConfirm={confirmDeleteMajlis}
+      />
     </ScrollView>
   );
 }

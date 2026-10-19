@@ -25,6 +25,8 @@ import {
 } from "../services/majlisService";
 import { uploadMajlisPoster } from "../services/storageService";
 
+import DeleteConfirmModal from "../components/DeleteConfirmModal";
+
 export default function EditEvent() {
   const router = useRouter();
   const { rowId } = useLocalSearchParams<{ rowId: string }>();
@@ -48,6 +50,8 @@ export default function EditEvent() {
   const [showCategories, setShowCategories] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const posterImageUrl = posterFileId
     ? `${appwriteConfig.endpoint}/storage/buckets/${appwriteConfig.posterBucketId}/files/${posterFileId}/view?project=${appwriteConfig.projectId}`
@@ -157,38 +161,27 @@ export default function EditEvent() {
   };
 
   const handleDeleteMajlis = () => {
-    if (!rowId) {
-      console.warn("Majlis row ID is missing");
-      return;
+    if (!rowId) return;
+
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDeleteMajlis = async () => {
+    if (!rowId) return;
+
+    try {
+      await deleteMajlis(rowId);
+
+      setDeleteModalVisible(false);
+      router.back();
+    } catch (error) {
+      console.error("Failed to delete Majlis:", error);
+
+      Alert.alert(
+        "Delete Failed",
+        "Unable to delete this Majlis. Please try again.",
+      );
     }
-
-    Alert.alert(
-      "Delete Majlis?",
-      "Are you sure you want to delete this Majlis?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteMajlis(rowId);
-              router.back();
-            } catch (error) {
-              console.error("Failed to delete Majlis:", error);
-
-              Alert.alert(
-                "Delete Failed",
-                "Unable to delete this Majlis. Please try again.",
-              );
-            }
-          },
-        },
-      ],
-    );
   };
 
   return (
@@ -279,11 +272,17 @@ export default function EditEvent() {
 
           <Pressable
             onPress={() => setShowCategories(!showCategories)}
-            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
           >
             <Text className="text-gray-700">
               {selectedCategory || "Select category"}
             </Text>
+
+            <MaterialCommunityIcons
+              name={showCategories ? "chevron-up" : "chevron-down"}
+              size={22}
+              color="#0b6b5a"
+            />
           </Pressable>
 
           {showCategories && (
@@ -311,9 +310,15 @@ export default function EditEvent() {
 
           <Pressable
             onPress={() => setShowDatePicker(true)}
-            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
           >
             <Text className="text-gray-700">{date || "Select date"}</Text>
+
+            <MaterialCommunityIcons
+              name="calendar-month-outline"
+              size={22}
+              color="#0b6b5a"
+            />
           </Pressable>
 
           {showDatePicker && (
@@ -346,9 +351,15 @@ export default function EditEvent() {
 
           <Pressable
             onPress={() => setShowTimePicker(true)}
-            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
           >
             <Text className="text-gray-700">{time || "Select time"}</Text>
+
+            <MaterialCommunityIcons
+              name="clock-outline"
+              size={22}
+              color="#0b6b5a"
+            />
           </Pressable>
 
           {showTimePicker && (
@@ -409,6 +420,11 @@ export default function EditEvent() {
           </Pressable>
         </View>
       </ScrollView>
+      <DeleteConfirmModal
+        visible={deleteModalVisible}
+        onCancel={() => setDeleteModalVisible(false)}
+        onConfirm={confirmDeleteMajlis}
+      />
     </KeyboardAvoidingView>
   );
 }

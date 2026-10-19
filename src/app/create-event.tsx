@@ -4,6 +4,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
+import type { LatLng } from "react-native-maps";
+import LocationPickerModal from "../components/Location-Picker-Modal";
 import {
   Image,
   KeyboardAvoidingView,
@@ -13,6 +15,7 @@ import {
   Text,
   TextInput,
   View,
+  Alert,
 } from "react-native";
 
 import { categories } from "../constants/majlis";
@@ -26,6 +29,14 @@ export default function CreateMajlis() {
   const [title, setTitle] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [location, setLocation] = useState("");
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [selectedCoordinates, setSelectedCoordinates] = useState<LatLng | null>(
+    null,
+  );
+  const [mapInitialCoordinates, setMapInitialCoordinates] = useState<LatLng>({
+    latitude: 31.5204,
+    longitude: 74.3587,
+  });
   const [selectedImage, setSelectedImage] =
     useState<ImagePicker.ImagePickerAsset | null>(null);
 
@@ -83,15 +94,23 @@ export default function CreateMajlis() {
       return;
     }
 
-    const results = await Location.geocodeAsync(location.trim());
+    let eventLatitude: number;
+    let eventLongitude: number;
 
-    if (results.length === 0) {
-      console.warn("Unable to find this location");
-      return;
+    if (selectedCoordinates) {
+      eventLatitude = selectedCoordinates.latitude;
+      eventLongitude = selectedCoordinates.longitude;
+    } else {
+      const results = await Location.geocodeAsync(location.trim());
+
+      if (results.length === 0) {
+        console.warn("Unable to find this location");
+        return;
+      }
+
+      eventLatitude = results[0].latitude;
+      eventLongitude = results[0].longitude;
     }
-
-    const eventLatitude = results[0].latitude;
-    const eventLongitude = results[0].longitude;
 
     const eventDateTime = new Date(selectedDate);
 
@@ -129,6 +148,34 @@ export default function CreateMajlis() {
 
     await createMajlis(eventData);
     router.back();
+  };
+
+  const handleOpenLocationPicker = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Location Permission",
+          "Allow location access to open the map at your current position.",
+        );
+        setShowLocationPicker(true);
+        return;
+      }
+
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      setMapInitialCoordinates({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+      });
+    } catch (error) {
+      console.error("Unable to get current location:", error);
+    }
+
+    setShowLocationPicker(true);
   };
 
   return (
@@ -225,11 +272,17 @@ export default function CreateMajlis() {
 
           <Pressable
             onPress={() => setShowCategories(!showCategories)}
-            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
           >
             <Text className="text-gray-700">
               {selectedCategory || "Select category"}
             </Text>
+
+            <MaterialCommunityIcons
+              name={showCategories ? "chevron-up" : "chevron-down"}
+              size={22}
+              color="#0b6b5a"
+            />
           </Pressable>
 
           {showCategories && (
@@ -257,11 +310,17 @@ export default function CreateMajlis() {
 
           <Pressable
             onPress={() => setShowDatePicker(true)}
-            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
           >
             <Text className="text-gray-700">
               {selectedDate.toLocaleDateString()}
             </Text>
+
+            <MaterialCommunityIcons
+              name="calendar-month-outline"
+              size={22}
+              color="#0b6b5a"
+            />
           </Pressable>
 
           {showDatePicker && (
@@ -285,7 +344,7 @@ export default function CreateMajlis() {
 
           <Pressable
             onPress={() => setShowTimePicker(true)}
-            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
           >
             <Text className="text-gray-700">
               {selectedTime.toLocaleTimeString([], {
@@ -293,6 +352,12 @@ export default function CreateMajlis() {
                 minute: "2-digit",
               })}
             </Text>
+
+            <MaterialCommunityIcons
+              name="clock-outline"
+              size={22}
+              color="#0b6b5a"
+            />
           </Pressable>
 
           {showTimePicker && (
@@ -314,13 +379,26 @@ export default function CreateMajlis() {
         <View className="mt-6">
           <Text className="mb-2 font-semibold text-gray-800">Location</Text>
 
-          <TextInput
-            value={location}
-            onChangeText={setLocation}
-            placeholder="Enter an event location"
-            placeholderTextColor="#6B7280"
-            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4 text-gray-700"
-          />
+          <View className="flex-row items-center rounded-xl border border-[#d6a85c] bg-white px-4">
+            <TextInput
+              value={location}
+              onChangeText={(text) => {
+                setLocation(text);
+                setSelectedCoordinates(null);
+              }}
+              placeholder="Enter Majlis location"
+              placeholderTextColor="#6B7280"
+              className="flex-1 py-4 text-gray-700"
+            />
+
+            <Pressable onPress={handleOpenLocationPicker} className="ml-2 p-2">
+              <MaterialCommunityIcons
+                name="map-marker-radius-outline"
+                size={24}
+                color="#0b6b5a"
+              />
+            </Pressable>
+          </View>
         </View>
 
         <View className="mt-10 flex-row gap-3">
@@ -339,6 +417,41 @@ export default function CreateMajlis() {
           </Pressable>
         </View>
       </ScrollView>
+
+      <LocationPickerModal
+        visible={showLocationPicker}
+        initialCoordinates={mapInitialCoordinates}
+        onCancel={() => setShowLocationPicker(false)}
+        onConfirm={async (coordinates) => {
+          setSelectedCoordinates(coordinates);
+          setMapInitialCoordinates(coordinates);
+          setShowLocationPicker(false);
+
+          try {
+            const addresses = await Location.reverseGeocodeAsync(coordinates);
+
+            if (addresses.length > 0) {
+              const address = addresses[0];
+
+              const formattedAddress = [
+                address.streetNumber,
+                address.street,
+                address.district,
+                address.city,
+                address.region,
+              ]
+                .filter(Boolean)
+                .join(", ");
+
+              if (formattedAddress) {
+                setLocation(formattedAddress);
+              }
+            }
+          } catch (error) {
+            console.error("Unable to fetch address:", error);
+          }
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
