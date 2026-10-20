@@ -53,7 +53,7 @@ export default function ResetPassword() {
 
     try {
       await resetPassword(email, newPassword);
-      router.replace("/login");
+      router.dismissTo("/login");
     } catch (error) {
       console.error("Password reset failed:", error);
 

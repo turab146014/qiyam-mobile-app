@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 import MapView, { Marker, type LatLng } from "react-native-maps";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type LocationPickerModalProps = {
   visible: boolean;
@@ -27,8 +28,8 @@ export default function LocationPickerModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onCancel}>
-      <View className="flex-1 bg-white">
-        <View className="flex-row items-center justify-between px-5 py-4">
+      <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-[#fdf9f4] ">
+        <View className="flex-row items-center justify-between px-5 py-4 ">
           <Text className="text-lg font-bold text-[#023f38]">
             Select Majlis Location
           </Text>
@@ -72,7 +73,7 @@ export default function LocationPickerModal({
             <Text className="font-semibold text-white">Confirm Location</Text>
           </Pressable>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
@@ -19,6 +19,20 @@ export default function PostMajlis() {
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedMajlisId, setSelectedMajlisId] = useState<string | null>(null);
+  const isNavigating = useRef(false);
+
+  const handleCreateEvent = () => {
+    if (isNavigating.current) return;
+
+    isNavigating.current = true;
+    router.push("/create-event");
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      isNavigating.current = false;
+    }, []),
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -130,7 +144,7 @@ export default function PostMajlis() {
       </View>
 
       <Pressable
-        onPress={() => router.push("/create-event")}
+        onPress={handleCreateEvent}
         className="mt-12 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
       >
         <Text className="font-bold text-white">+ Create New Event</Text>

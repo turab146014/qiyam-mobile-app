@@ -38,7 +38,7 @@ export default function Login() {
     try {
       await loginAccount(identifier, password);
 
-      router.push("/post-event");
+      router.replace("/post-event");
     } catch (error) {
       console.error("Login failed:", error);
       setLoginError("Unable to sign in. Please check your email and password.");

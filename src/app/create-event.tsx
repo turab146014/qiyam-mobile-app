@@ -379,24 +379,36 @@ export default function CreateMajlis() {
         <View className="mt-6">
           <Text className="mb-2 font-semibold text-gray-800">Location</Text>
 
-          <View className="flex-row items-center rounded-xl border border-[#d6a85c] bg-white px-4">
+          <View className="gap-3">
             <TextInput
               value={location}
-              onChangeText={(text) => {
-                setLocation(text);
-                setSelectedCoordinates(null);
-              }}
-              placeholder="Enter Majlis location"
-              placeholderTextColor="#6B7280"
-              className="flex-1 py-4 text-gray-700"
+              onChangeText={setLocation}
+              placeholder="Enter complete Majlis address"
+              placeholderTextColor= "#6B7280"
+              multiline
+              scrollEnabled={false}
+              className="min-h-14 rounded-xl border border-[#d6a85c] bg-white px-4 py-3 text-gray-700"
             />
 
-            <Pressable onPress={handleOpenLocationPicker} className="ml-2 p-2">
+            <View className="flex-row items-center gap-3">
+              <View className="h-px flex-1 bg-gray-300" />
+              <Text className="text-xs font-medium text-gray-400">OR</Text>
+              <View className="h-px flex-1 bg-gray-300" />
+            </View>
+
+            <Pressable
+              onPress={handleOpenLocationPicker}
+              className="flex-row items-center justify-center gap-2 rounded-xl border border-[#0b6b5a] bg-[#eef7f4] py-4"
+            >
               <MaterialCommunityIcons
                 name="map-marker-radius-outline"
-                size={24}
+                size={22}
                 color="#0b6b5a"
               />
+
+              <Text className="font-semibold text-[#0b6b5a]">
+                Select Location on Map
+              </Text>
             </Pressable>
           </View>
         </View>

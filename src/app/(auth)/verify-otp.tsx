@@ -119,6 +119,7 @@ export default function VerifyOtp() {
           </Text>
 
           <TextInput
+            key={otp.length === 0 ? "empty" : "filled"}
             value={otp}
             onChangeText={(text) => {
               setOtp(text);
@@ -128,7 +129,8 @@ export default function VerifyOtp() {
             placeholderTextColor="#9ca3af"
             keyboardType="number-pad"
             maxLength={6}
-            className="rounded-xl border border-gray-300 bg-white px-4 py-4 text-center text-xl tracking-widest text-gray-900"
+            textAlign="center"
+            className="rounded-xl border border-gray-300 bg-white px-4 py-4 text-xl tracking-widest text-gray-900"
           />
 
           {otpError !== "" && (

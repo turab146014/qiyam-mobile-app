@@ -4,6 +4,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
+import type { LatLng } from "react-native-maps";
+import LocationPickerModal from "../components/Location-Picker-Modal";
 import {
   Alert,
   Image,
@@ -34,6 +36,14 @@ export default function EditEvent() {
   const [title, setTitle] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [location, setLocation] = useState("");
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [selectedCoordinates, setSelectedCoordinates] = useState<LatLng | null>(
+    null,
+  );
+  const [mapInitialCoordinates, setMapInitialCoordinates] = useState<LatLng>({
+    latitude: 31.5204,
+    longitude: 74.3587,
+  });
 
   const [posterFileId, setPosterFileId] = useState("");
   const [newPoster, setNewPoster] =
@@ -76,6 +86,10 @@ export default function EditEvent() {
         setOriginalLocation(majlis.location);
         setLatitude(Number(majlis.latitude));
         setLongitude(Number(majlis.longitude));
+        setMapInitialCoordinates({
+          latitude: Number(majlis.latitude),
+          longitude: Number(majlis.longitude),
+        });
 
         setDate(majlis.date);
         setTime(majlis.time);
@@ -118,11 +132,15 @@ export default function EditEvent() {
     }
 
     try {
-      let eventLatitude = latitude;
-      let eventLongitude = longitude;
       let finalPosterFileId = posterFileId;
 
-      if (location.trim() !== originalLocation.trim()) {
+      let eventLatitude = latitude;
+      let eventLongitude = longitude;
+
+      if (selectedCoordinates) {
+        eventLatitude = selectedCoordinates.latitude;
+        eventLongitude = selectedCoordinates.longitude;
+      } else if (location.trim() !== originalLocation.trim()) {
         const results = await Location.geocodeAsync(location.trim());
 
         if (results.length === 0) {
@@ -395,13 +413,38 @@ export default function EditEvent() {
         <View className="mt-6">
           <Text className="mb-2 font-semibold text-gray-800">Location</Text>
 
-          <TextInput
-            value={location}
-            onChangeText={setLocation}
-            placeholder="Enter an event location"
-            placeholderTextColor="#6B7280"
-            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4 text-gray-700"
-          />
+          <View className="gap-3">
+            <TextInput
+              value={location}
+              onChangeText={setLocation}
+              placeholder="Enter complete Majlis address"
+              multiline
+              textAlignVertical="top"
+              scrollEnabled={false}
+              className="min-h-14 rounded-xl border border-[#d6a85c] bg-white px-4 py-3 text-gray-700"
+            />
+
+            <View className="flex-row items-center gap-3">
+              <View className="h-px flex-1 bg-gray-300" />
+              <Text className="text-xs font-medium text-gray-400">OR</Text>
+              <View className="h-px flex-1 bg-gray-300" />
+            </View>
+
+            <Pressable
+              onPress={() => setShowLocationPicker(true)}
+              className="flex-row items-center justify-center gap-2 rounded-xl border border-[#0b6b5a] bg-[#eef7f4] py-4"
+            >
+              <MaterialCommunityIcons
+                name="map-marker-radius-outline"
+                size={22}
+                color="#0b6b5a"
+              />
+
+              <Text className="font-semibold text-[#0b6b5a]">
+                Select Location on Map
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <View className="mt-10 flex-row gap-3">
@@ -424,6 +467,41 @@ export default function EditEvent() {
         visible={deleteModalVisible}
         onCancel={() => setDeleteModalVisible(false)}
         onConfirm={confirmDeleteMajlis}
+      />
+
+      <LocationPickerModal
+        visible={showLocationPicker}
+        initialCoordinates={mapInitialCoordinates}
+        onCancel={() => setShowLocationPicker(false)}
+        onConfirm={async (coordinates) => {
+          setSelectedCoordinates(coordinates);
+          setMapInitialCoordinates(coordinates);
+          setShowLocationPicker(false);
+
+          try {
+            const addresses = await Location.reverseGeocodeAsync(coordinates);
+
+            if (addresses.length > 0) {
+              const address = addresses[0];
+
+              const formattedAddress = [
+                address.streetNumber,
+                address.street,
+                address.district,
+                address.city,
+                address.region,
+              ]
+                .filter(Boolean)
+                .join(", ");
+
+              if (formattedAddress) {
+                setLocation(formattedAddress);
+              }
+            }
+          } catch (error) {
+            console.error("Unable to fetch address:", error);
+          }
+        }}
       />
     </KeyboardAvoidingView>
   );
