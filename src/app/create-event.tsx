@@ -194,16 +194,10 @@ export default function CreateMajlis() {
         }}
       >
         <Text className="text-center text-3xl font-bold text-[#023f38]">
-          Create an Event
-        </Text>
-
-        <Text className="mt-10 text-xl font-bold text-[#023f38]">
-          Event Details
+          Create New Event
         </Text>
 
         <View className="mt-6">
-          <Text className="mb-2 font-semibold text-gray-800">Event Image</Text>
-
           <Pressable
             onPress={handlePickImage}
             className="h-80 overflow-hidden rounded-3xl border border-[#d6a85c] bg-white"
@@ -237,25 +231,34 @@ export default function CreateMajlis() {
                   color="#0b6b5a"
                 />
 
-                <Text className="mt-3 text-base font-semibold text-[#0b6b5a]">
-                  Add Event Image
-                </Text>
-
-                <Text className="mt-1 text-center text-sm text-gray-500">
-                  Upload an image for your Majlis
+                <Text className="mt-3 text-center text-base text-gray-400">
+                  Upload an image here!
                 </Text>
               </View>
             )}
           </Pressable>
 
-          {selectedImage && (
-            <Text className="mt-2 text-center text-sm text-[#0b6b5a]">
-              Tap image to change poster
+          <Pressable
+            onPress={handlePickImage}
+            className="mt-3 min-h-11 flex-row items-center justify-center gap-2 rounded-xl border border-[#0b6b5a] bg-[#eef7f4] px-4"
+            accessibilityRole="button"
+            accessibilityLabel={
+              selectedImage ? "Change Poster" : "Add Poster"
+            }
+          >
+            <MaterialCommunityIcons
+              name={selectedImage ? "image-edit-outline" : "image-plus"}
+              size={20}
+              color="#0b6b5a"
+            />
+
+            <Text className="font-semibold text-[#0b6b5a]">
+              {selectedImage ? "Change Poster" : "Upload Poster"}
             </Text>
-          )}
+          </Pressable>
         </View>
 
-        <View className="mt-6">
+        <View className="mt-4">
           <Text className="mb-2 font-semibold text-gray-800">Title</Text>
 
           <TextInput
@@ -263,7 +266,7 @@ export default function CreateMajlis() {
             onChangeText={setTitle}
             placeholder="Enter event title"
             placeholderTextColor="#6B7280"
-            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4 text-gray-700"
+            className="min-h-14 rounded-xl border border-[#d6a85c] bg-white px-4 py-3 text-base text-gray-700"
           />
         </View>
 
@@ -272,7 +275,7 @@ export default function CreateMajlis() {
 
           <Pressable
             onPress={() => setShowCategories(!showCategories)}
-            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+            className="min-h-14 flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-3"
           >
             <Text className="text-gray-700">
               {selectedCategory || "Select category"}
@@ -304,76 +307,81 @@ export default function CreateMajlis() {
             </View>
           )}
         </View>
+        <View className="mt-4 flex-row gap-3">
+          <View className="min-w-0 flex-[1.2]">
+            <Text className="mb-2 font-semibold text-gray-800">Date</Text>
 
-        <View className="mt-6">
-          <Text className="mb-2 font-semibold text-gray-800">Date</Text>
+            <Pressable
+              onPress={() => setShowDatePicker(true)}
+              className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+            >
+              <Text className="text-gray-700">
+                {selectedDate.toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </Text>
 
-          <Pressable
-            onPress={() => setShowDatePicker(true)}
-            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
-          >
-            <Text className="text-gray-700">
-              {selectedDate.toLocaleDateString()}
-            </Text>
+              <MaterialCommunityIcons
+                name="calendar-month-outline"
+                size={22}
+                color="#0b6b5a"
+              />
+            </Pressable>
 
-            <MaterialCommunityIcons
-              name="calendar-month-outline"
-              size={22}
-              color="#0b6b5a"
-            />
-          </Pressable>
+            {showDatePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="default"
+                onChange={(event, date) => {
+                  setShowDatePicker(false);
 
-          {showDatePicker && (
-            <DateTimePicker
-              value={selectedDate}
-              mode="date"
-              display="default"
-              onChange={(event, date) => {
-                setShowDatePicker(false);
+                  if (date) {
+                    setSelectedDate(date);
+                  }
+                }}
+              />
+            )}
+          </View>
 
-                if (date) {
-                  setSelectedDate(date);
-                }
-              }}
-            />
-          )}
-        </View>
+          <View className="min-w-0 flex-1">
+            <Text className="mb-2 font-semibold text-gray-800">Time</Text>
 
-        <View className="mt-6">
-          <Text className="mb-2 font-semibold text-gray-800">Time</Text>
+            <Pressable
+              onPress={() => setShowTimePicker(true)}
+              className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+            >
+              <Text className="text-gray-700">
+                {selectedTime.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
 
-          <Pressable
-            onPress={() => setShowTimePicker(true)}
-            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
-          >
-            <Text className="text-gray-700">
-              {selectedTime.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </Text>
+              <MaterialCommunityIcons
+                name="clock-outline"
+                size={22}
+                color="#0b6b5a"
+              />
+            </Pressable>
 
-            <MaterialCommunityIcons
-              name="clock-outline"
-              size={22}
-              color="#0b6b5a"
-            />
-          </Pressable>
+            {showTimePicker && (
+              <DateTimePicker
+                value={selectedTime}
+                mode="time"
+                display="default"
+                onChange={(event, time) => {
+                  setShowTimePicker(false);
 
-          {showTimePicker && (
-            <DateTimePicker
-              value={selectedTime}
-              mode="time"
-              display="default"
-              onChange={(event, time) => {
-                setShowTimePicker(false);
-
-                if (time) {
-                  setSelectedTime(time);
-                }
-              }}
-            />
-          )}
+                  if (time) {
+                    setSelectedTime(time);
+                  }
+                }}
+              />
+            )}
+          </View>
         </View>
 
         <View className="mt-6">
@@ -384,7 +392,7 @@ export default function CreateMajlis() {
               value={location}
               onChangeText={setLocation}
               placeholder="Enter complete Majlis address"
-              placeholderTextColor= "#6B7280"
+              placeholderTextColor="#6B7280"
               multiline
               scrollEnabled={false}
               className="min-h-14 rounded-xl border border-[#d6a85c] bg-white px-4 py-3 text-gray-700"

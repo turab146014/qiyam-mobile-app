@@ -15,7 +15,7 @@ export default function HomeScreen() {
     }
 
     console.log("Authenticated user:", user.email);
-    router.push("/post-event");
+    router.navigate("/post-event");
   };
 
   return (

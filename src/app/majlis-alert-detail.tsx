@@ -195,12 +195,6 @@ export default function MajlisAlertDetail() {
             }
             className="bg-[#025e44] rounded-xl py-4 mt-8 mb-8 flex-row items-center justify-center"
           >
-            <MaterialCommunityIcons
-              name="map-outline"
-              size={22}
-              color="white"
-            />
-
             <Text className="text-white font-bold text-base ml-2">
               View Full Map
             </Text>

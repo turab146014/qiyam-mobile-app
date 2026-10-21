@@ -218,16 +218,10 @@ export default function EditEvent() {
         }}
       >
         <Text className="text-center text-3xl font-bold text-[#023f38]">
-          Edit an Event
-        </Text>
-
-        <Text className="mt-10 text-xl font-bold text-[#023f38]">
-          Event Details
+          Edit Event
         </Text>
 
         <View className="mt-6">
-          <Text className="mb-2 font-semibold text-gray-800">Event Image</Text>
-
           <Pressable
             onPress={handlePickPoster}
             className="h-80 overflow-hidden rounded-2xl border border-[#d6a85c] bg-white"
@@ -268,12 +262,26 @@ export default function EditEvent() {
             )}
           </Pressable>
 
-          <Text className="mt-2 text-center text-sm text-[#0b6b5a]">
-            Tap image to change poster
-          </Text>
+          <Pressable
+            onPress={handlePickPoster}
+            className="mt-3 min-h-11 flex-row items-center justify-center gap-2 rounded-xl border border-[#0b6b5a] bg-[#eef7f4] px-4"
+            accessibilityRole="button"
+            accessibilityLabel={
+              previewImageUri ? "Change Poster" : "Add Poster"
+            }
+          >
+            <MaterialCommunityIcons
+              name="image-edit-outline"
+              size={20}
+              color="#0b6b5a"
+            />
+            <Text className="font-semibold text-[#0b6b5a]">
+              {previewImageUri ? "Change Poster" : "Add Poster"}
+            </Text>
+          </Pressable>
         </View>
 
-        <View className="mt-6">
+        <View className="mt-4">
           <Text className="mb-2 font-semibold text-gray-800">Title</Text>
 
           <TextInput
@@ -281,16 +289,16 @@ export default function EditEvent() {
             onChangeText={setTitle}
             placeholder="Enter event title"
             placeholderTextColor="#6B7280"
-            className="rounded-xl border border-[#d6a85c] bg-white px-4 py-4 text-gray-700"
+            className="min-h-14 rounded-xl border border-[#d6a85c] bg-white px-4 py-3 text-base text-gray-700"
           />
         </View>
 
-        <View className="mt-6">
+        <View className="mt-4">
           <Text className="mb-2 font-semibold text-gray-800">Category</Text>
 
           <Pressable
             onPress={() => setShowCategories(!showCategories)}
-            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
+            className="min-h-14 flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-3"
           >
             <Text className="text-gray-700">
               {selectedCategory || "Select category"}
@@ -323,91 +331,101 @@ export default function EditEvent() {
           )}
         </View>
 
-        <View className="mt-6">
-          <Text className="mb-2 font-semibold text-gray-800">Date</Text>
+        <View className="mt-4 flex-row gap-3">
+          <View className="min-w-0 flex-[1.3]">
+            <Text className="mb-2 font-semibold text-gray-800">Date</Text>
+            <Pressable
+              onPress={() => setShowDatePicker(true)}
+              className="min-h-14 flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-3"
+            >
+              <Text
+                numberOfLines={1}
+                className="min-w-0 flex-1 text-sm text-gray-700"
+              >
+                {selectedDate.toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </Text>
 
-          <Pressable
-            onPress={() => setShowDatePicker(true)}
-            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
-          >
-            <Text className="text-gray-700">{date || "Select date"}</Text>
+              <MaterialCommunityIcons
+                name="calendar-month-outline"
+                size={22}
+                color="#0b6b5a"
+              />
+            </Pressable>
 
-            <MaterialCommunityIcons
-              name="calendar-month-outline"
-              size={22}
-              color="#0b6b5a"
-            />
-          </Pressable>
+            {showDatePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="default"
+                onValueChange={(event, newDate) => {
+                  setShowDatePicker(false);
 
-          {showDatePicker && (
-            <DateTimePicker
-              value={selectedDate}
-              mode="date"
-              display="default"
-              onValueChange={(event, newDate) => {
-                setShowDatePicker(false);
+                  if (newDate) {
+                    setSelectedDate(newDate);
 
-                if (newDate) {
-                  setSelectedDate(newDate);
+                    setDate(
+                      newDate.toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      }),
+                    );
+                  }
+                }}
+                onDismiss={() => setShowDatePicker(false)}
+              />
+            )}
+          </View>
 
-                  setDate(
-                    newDate.toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    }),
-                  );
-                }
-              }}
-              onDismiss={() => setShowDatePicker(false)}
-            />
-          )}
-        </View>
+          <View className="min-w-0 flex-1">
+            <Text className="mb-2 font-semibold text-gray-800">Time</Text>
 
-        <View className="mt-6">
-          <Text className="mb-2 font-semibold text-gray-800">Time</Text>
+            <Pressable
+              onPress={() => setShowTimePicker(true)}
+              className="min-h-14 flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-3"
+            >
+              <Text className="text-gray-700">{time || "Select time"}</Text>
 
-          <Pressable
-            onPress={() => setShowTimePicker(true)}
-            className="flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-4"
-          >
-            <Text className="text-gray-700">{time || "Select time"}</Text>
+              <MaterialCommunityIcons
+                name="clock-outline"
+                size={22}
+                color="#0b6b5a"
+              />
+            </Pressable>
 
-            <MaterialCommunityIcons
-              name="clock-outline"
-              size={22}
-              color="#0b6b5a"
-            />
-          </Pressable>
+            {showTimePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="time"
+                display="default"
+                onValueChange={(event, newTime) => {
+                  setShowTimePicker(false);
 
-          {showTimePicker && (
-            <DateTimePicker
-              value={selectedDate}
-              mode="time"
-              display="default"
-              onValueChange={(event, newTime) => {
-                setShowTimePicker(false);
+                  if (newTime) {
+                    const updatedDate = new Date(selectedDate);
 
-                if (newTime) {
-                  const updatedDate = new Date(selectedDate);
+                    updatedDate.setHours(newTime.getHours());
+                    updatedDate.setMinutes(newTime.getMinutes());
 
-                  updatedDate.setHours(newTime.getHours());
-                  updatedDate.setMinutes(newTime.getMinutes());
+                    setSelectedDate(updatedDate);
 
-                  setSelectedDate(updatedDate);
-
-                  setTime(
-                    updatedDate.toLocaleTimeString("en-US", {
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    }),
-                  );
-                }
-              }}
-              onDismiss={() => setShowTimePicker(false)}
-            />
-          )}
+                    setTime(
+                      updatedDate.toLocaleTimeString("en-US", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      }),
+                    );
+                  }
+                }}
+                onDismiss={() => setShowTimePicker(false)}
+              />
+            )}
+          </View>
         </View>
 
         <View className="mt-6">

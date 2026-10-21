@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
@@ -10,6 +10,8 @@ import { deleteMajlis, getMajlisRows } from "../services/majlisService";
 import type { Majlis } from "../types/majlis";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 
+import MajlisCardSkeleton from "../components/Majlis-Card-Skeleton";
+
 export default function PostMajlis() {
   const router = useRouter();
 
@@ -19,26 +21,19 @@ export default function PostMajlis() {
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedMajlisId, setSelectedMajlisId] = useState<string | null>(null);
-  const isNavigating = useRef(false);
 
-  const handleCreateEvent = () => {
-    if (isNavigating.current) return;
-
-    isNavigating.current = true;
-    router.push("/create-event");
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      isNavigating.current = false;
-    }, []),
-  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
 
       const loadMajalis = async () => {
+        setIsLoading(true);
+
+        setLoadError(false);
+
         try {
           const user = await account.get();
           const rows = await getMajlisRows(user.$id);
@@ -50,6 +45,11 @@ export default function PostMajlis() {
         } catch (error) {
           if (isActive) {
             console.error("Unable to load Majalis:", error);
+            setLoadError(true);
+          }
+        } finally {
+          if (isActive) {
+            setIsLoading(false);
           }
         }
       };
@@ -124,14 +124,16 @@ export default function PostMajlis() {
     >
       <View className="flex-row items-start justify-between">
         <View>
-          <Text className="text-3xl font-bold text-[#023f38]">Hello,</Text>
-
-          <Text className="text-3xl font-bold text-[#023f38]">
-            {userName ? `${userName.toUpperCase()}!` : "THERE!"}
+          <Text className="text-2xl font-bold text-[#023f38]">
+            Welcome back
           </Text>
 
-          <Text className="mt-3 text-sm text-[#d6a85c]">
-            Manage your posted events here.
+          <Text className="text-3xl font-bold text-[#023f38]">
+            {userName ? `${userName.toUpperCase()}` : "THERE!"}
+          </Text>
+
+          <Text className="mt-2 text-sm text-[#d6a85c]">
+            Manage your Majlis announcements
           </Text>
         </View>
 
@@ -144,37 +146,28 @@ export default function PostMajlis() {
       </View>
 
       <Pressable
-        onPress={handleCreateEvent}
+        onPress={() => router.navigate("/create-event")}
         className="mt-12 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
       >
-        <Text className="font-bold text-white">+ Create New Event</Text>
+        <Text className="font-bold text-white">Create New Event</Text>
       </Pressable>
 
-      <View className="mt-6 flex-row gap-3">
+      <View className="mt-6 flex-row rounded-2xl bg-[#e8f4f0] p-0.5">
         {["Upcoming", "Outdated", "Rejected"].map((status) => (
           <Pressable
             key={status}
             onPress={() => setSelectedStatus(status)}
-            className={`flex-1 flex-row items-center justify-center rounded-xl border px-2 py-3 ${
-              selectedStatus === status
-                ? "border-[#0b6b5a] bg-[#0b6b5a]"
-                : "border-[#d6a85c] bg-white"
+            className={`min-h-10 flex-1 items-center justify-center rounded-2xl ${
+              selectedStatus === status ? "bg-[#0b6b5a]" : "bg-transparent"
             }`}
           >
             <Text
-              className={`font-bold ${
+              className={`text-sm font-semibold ${
                 selectedStatus === status ? "text-white" : "text-[#023f38]"
               }`}
             >
               {status}
             </Text>
-
-            <MaterialCommunityIcons
-              name="chevron-down"
-              size={18}
-              color={selectedStatus === status ? "white" : "#023f38"}
-              style={{ marginLeft: 4 }}
-            />
           </Pressable>
         ))}
       </View>
@@ -183,10 +176,14 @@ export default function PostMajlis() {
         {selectedStatus} Events
       </Text>
 
-      {filteredMajalis.length === 0 ? (
-        <Text className="mt-10 text-center text-gray-500">
-          No Majlis available
-        </Text>
+      {isLoading ? (
+        [1, 2, 3].map((item) => <MajlisCardSkeleton key={item} />)
+      ) : loadError ? (
+        <View className="items-center py-8">
+          <Text className="text-center text-red-600">
+            Unable to load events. Please try again.
+          </Text>
+        </View>
       ) : (
         filteredMajalis.map((item) => (
           <MajlisCard

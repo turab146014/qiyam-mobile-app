@@ -27,7 +27,7 @@ export default function MajlisCard({
       className="mb-4 w-full rounded-xl border border-[#d6a85c] bg-white p-4"
     >
       <View className="flex-row items-center justify-between">
-        <Text className="flex-1 text-base font-bold text-[#023f38]">
+        <Text className="flex-1 text-lg font-bold text-[#023f38]">
           {item.name}
         </Text>
 
@@ -37,13 +37,13 @@ export default function MajlisCard({
               event.stopPropagation();
               onEdit();
             }}
-            className="ml-3 p-1"
+            className="ml-2 h-9 w-9 items-center justify-center rounded-full bg-[#e8f4f0]"
             accessibilityRole="button"
             accessibilityLabel="Edit Majlis"
           >
             <MaterialCommunityIcons
               name="pencil-outline"
-              size={22}
+              size={20}
               color="#0b6b5a"
             />
           </Pressable>
@@ -55,13 +55,13 @@ export default function MajlisCard({
               event.stopPropagation();
               onDelete();
             }}
-            className="ml-3 p-1"
+            className="ml-2 h-9 w-9 items-center justify-center rounded-full bg-[#fef2f2]"
             accessibilityRole="button"
             accessibilityLabel="Delete Majlis"
           >
             <MaterialCommunityIcons
               name="trash-can-outline"
-              size={22}
+              size={20}
               color="#dc2626"
             />
           </Pressable>
