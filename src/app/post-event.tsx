@@ -25,13 +25,16 @@ export default function PostMajlis() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
+  const [currentTime, setCurrentTime] = useState(0);
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
 
+      setCurrentTime(Date.now());
+
       const loadMajalis = async () => {
         setIsLoading(true);
-
         setLoadError(false);
 
         try {
@@ -64,7 +67,6 @@ export default function PostMajlis() {
 
   const filteredMajalis = majalis.filter((item) => {
     const eventTime = new Date(item.dateValue).getTime();
-    const currentTime = Date.now();
 
     if (selectedStatus === "Upcoming") {
       return eventTime > currentTime;

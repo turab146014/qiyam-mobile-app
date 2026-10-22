@@ -1,7 +1,7 @@
 import { View, Text, Pressable, ImageBackground } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { checkSession, logoutAccount } from "../services/auth/authService";
+import { checkSession } from "../services/auth/authService";
 
 export default function HomeScreen() {
   const router = useRouter();

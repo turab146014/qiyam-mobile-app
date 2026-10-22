@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MajlisCard from "../components/majlis-card";
@@ -25,7 +25,6 @@ export default function MajlisAlertScreen() {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
-  const [filteredMajlis, setFilteredMajlis] = useState<Majlis[]>([]);
   const [majlisList, setMajlisList] = useState<Majlis[]>([]);
   const [appwriteLoading, setAppwriteLoading] = useState(false);
   const [appwriteError, setAppwriteError] = useState("");
@@ -39,7 +38,7 @@ export default function MajlisAlertScreen() {
         const rows = await getMajlisRows();
 
         setMajlisList(rows);
-      } catch (error) {
+      } catch {
         setAppwriteError("Unable to load Majlis data. Please try again.");
       } finally {
         setAppwriteLoading(false);
@@ -49,10 +48,9 @@ export default function MajlisAlertScreen() {
     fetchMajlisData();
   }, []);
 
-  useEffect(() => {
+  const filteredMajlis = useMemo(() => {
     if (!userLocation) {
-      setFilteredMajlis([]);
-      return;
+      return [];
     }
 
     let results = majlisList.map((item) => {
@@ -74,7 +72,7 @@ export default function MajlisAlertScreen() {
 
     results = sortMajlisFilters(results, selectedFilter);
 
-    setFilteredMajlis(results);
+    return results;
   }, [
     majlisList,
     userLocation,

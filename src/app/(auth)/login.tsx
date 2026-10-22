@@ -108,7 +108,7 @@ export default function Login() {
         <AuthButton title="Sign In" onPress={handleSignIn} />
 
         <View className="mt-8 flex-row justify-center">
-          <Text className="text-gray-600">Don't have an account? </Text>
+          <Text className="text-gray-600">Don&apos;t have an account? </Text>
 
           <Pressable onPress={() => router.push("/signup")}>
             <Text className="font-bold text-[#0b6b5a]">Sign Up</Text>

@@ -130,7 +130,7 @@ const MajlisMap = ({
     });
 
     hasSetInitialRadiusView.current = true;
-  }, [isMapReady, userLocation, selectedDistance, isModalMap, height]);
+  }, [isMapReady, userLocation, selectedDistance, isModalMap, height, initialCenter, showRadius]);
 
   return (
     <View style={isFullScreen ? { flex: 1 } : { height: 280, width: "100%" }}>
