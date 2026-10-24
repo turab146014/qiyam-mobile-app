@@ -62,7 +62,7 @@ const MajlisMap = ({
   const hasSetInitialRadiusView = useRef(false);
   const { height } = useWindowDimensions();
 
-  const [currentRegion, setCurrentRegion] = useState<Region>({
+  const currentRegionRef = useRef<Region>({
     latitude: userLocation?.latitude ?? defaultRegion.latitude,
     longitude: userLocation?.longitude ?? defaultRegion.longitude,
     latitudeDelta: 0.05,
@@ -70,14 +70,15 @@ const MajlisMap = ({
   });
 
   const focusOnVisibleArea = (latitude: number, longitude: number) => {
-    const latitudeOffset = isModalMap ? 0 : currentRegion.latitudeDelta * 0.2;
+    const region = currentRegionRef.current;
+    const latitudeOffset = isModalMap ? 0 : region.latitudeDelta * 0.2;
 
     mapRef.current?.animateToRegion(
       {
         latitude: latitude - latitudeOffset,
         longitude,
-        latitudeDelta: currentRegion.latitudeDelta,
-        longitudeDelta: currentRegion.longitudeDelta,
+        latitudeDelta: region.latitudeDelta,
+        longitudeDelta: region.longitudeDelta,
       },
       400,
     );
@@ -130,7 +131,15 @@ const MajlisMap = ({
     });
 
     hasSetInitialRadiusView.current = true;
-  }, [isMapReady, userLocation, selectedDistance, isModalMap, height, initialCenter, showRadius]);
+  }, [
+    isMapReady,
+    userLocation,
+    selectedDistance,
+    isModalMap,
+    height,
+    initialCenter,
+    showRadius,
+  ]);
 
   return (
     <View style={isFullScreen ? { flex: 1 } : { height: 280, width: "100%" }}>
@@ -166,7 +175,7 @@ const MajlisMap = ({
         moveOnMarkerPress={true}
         ref={mapRef}
         onRegionChangeComplete={(region) => {
-          setCurrentRegion(region);
+          currentRegionRef.current = region;
         }}
       >
         {showRadius && userLocation && (
