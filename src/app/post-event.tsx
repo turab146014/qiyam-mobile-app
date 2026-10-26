@@ -186,6 +186,17 @@ export default function PostMajlis() {
             Unable to load events. Please try again.
           </Text>
         </View>
+      ) : filteredMajalis.length === 0 ? (
+        <View className="items-center py-8">
+          <MaterialCommunityIcons
+            name="calendar-blank-outline"
+            size={40}
+            color="#9ca3af"
+          />
+          <Text className="mt-3 text-center text-gray-500">
+            No {selectedStatus.toLowerCase()} Majlis
+          </Text>
+        </View>
       ) : (
         filteredMajalis.map((item) => (
           <MajlisCard
