@@ -1,15 +1,6 @@
-export const categories = [
-  "All",
-  "Dars",
-  "Ladies Majlis",
-  "Gents Majlis",
-  "Niaz Place",
-  "Jaloos",
-];
-
 export const filters = [
   "Soonest",
-  "Oldest",
+  "Latest",
   "Nearest",
 ];
 

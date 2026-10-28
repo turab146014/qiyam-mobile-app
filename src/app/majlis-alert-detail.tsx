@@ -11,7 +11,6 @@ import {
   Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { appwriteConfig } from "../services/appwrite";
 import { useState } from "react";
 
 export default function MajlisAlertDetail() {
@@ -28,15 +27,13 @@ export default function MajlisAlertDetail() {
     date,
     location,
     distance,
-    posterFileId,
+    posterUrl,
     latitude,
     longitude,
   } = useLocalSearchParams();
 
   const posterImageUrl =
-    typeof posterFileId === "string" && posterFileId.trim() !== ""
-      ? `${appwriteConfig.endpoint}/storage/buckets/${appwriteConfig.posterBucketId}/files/${posterFileId}/view?project=${appwriteConfig.projectId}`
-      : "";
+    typeof posterUrl === "string" && posterUrl.trim() !== "" ? posterUrl : "";
 
   const [isPosterFullScreen, setIsPosterFullScreen] = useState(false);
 
@@ -187,7 +184,7 @@ export default function MajlisAlertDetail() {
                   date: String(date),
                   location: String(location),
                   distance: String(distance),
-                  posterFileId: String(posterFileId),
+                  posterUrl: String(posterUrl ?? ""),
                   latitude: String(latitude),
                   longitude: String(longitude),
                 },

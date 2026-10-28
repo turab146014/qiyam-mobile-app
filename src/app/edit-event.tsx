@@ -7,14 +7,20 @@ import { Alert, Pressable, Text } from "react-native";
 
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 import EventForm from "../components/event-form";
-import { appwriteConfig } from "../services/appwrite";
+import { ApiError } from "../services/apiClient";
 import {
-  deleteMajlis,
-  getMajlisById,
-  updateMajlis,
-} from "../services/majlisService";
-import { uploadMajlisPoster } from "../services/storageService";
-import { formatEventDate, formatEventTime } from "../utils/eventForm";
+  deleteMyMajlis,
+  getMyMajlisById,
+  updateMyMajlis,
+  type MajlisFormInput,
+} from "../services/myMajlisService";
+import type { Majlis } from "../types/majlis";
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof ApiError
+    ? error.message
+    : "Something went wrong. Please try again.";
+}
 
 export default function EditEvent() {
   const router = useRouter();
@@ -27,111 +33,138 @@ export default function EditEvent() {
     null,
   );
 
-  const [posterFileId, setPosterFileId] = useState("");
   const [newPoster, setNewPoster] =
     useState<ImagePicker.ImagePickerAsset | null>(null);
 
   const [eventDateTime, setEventDateTime] = useState(new Date());
 
-  const [originalLocation, setOriginalLocation] = useState("");
-  const [savedCoordinates, setSavedCoordinates] = useState<LatLng | null>(null);
+  const [original, setOriginal] = useState<Majlis | null>(null);
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const posterImageUrl = posterFileId
-    ? `${appwriteConfig.endpoint}/storage/buckets/${appwriteConfig.posterBucketId}/files/${posterFileId}/view?project=${appwriteConfig.projectId}`
-    : "";
-
-  const previewImageUri = newPoster?.uri || posterImageUrl;
+  const previewImageUri = newPoster?.uri || original?.posterUrl || "";
 
   useEffect(() => {
+    let isActive = true;
+
     const loadMajlis = async () => {
       if (!rowId) {
-        console.warn("Majlis row ID is missing");
+        Alert.alert(
+          "Something went wrong",
+          "This majlis could not be opened.",
+          [{ text: "OK", onPress: () => router.back() }],
+        );
         return;
       }
 
       try {
-        const majlis = await getMajlisById(rowId);
+        const majlis = await getMyMajlisById(rowId);
 
+        if (!isActive) return;
+
+        setOriginal(majlis);
         setTitle(majlis.name);
         setSelectedCategory(majlis.category);
         setLocation(majlis.location);
-
-        setOriginalLocation(majlis.location);
-        setSavedCoordinates({
-          latitude: Number(majlis.latitude),
-          longitude: Number(majlis.longitude),
-        });
-
-        if (majlis.dateValue) {
-          setEventDateTime(new Date(majlis.dateValue));
-        }
-
-        setPosterFileId(majlis.posterFileId ?? "");
+        setEventDateTime(new Date(majlis.dateValue));
       } catch (error) {
+        if (!isActive) return;
+
         console.error("Unable to load selected Majlis:", error);
+        Alert.alert("Couldn't load this majlis", getErrorMessage(error), [
+          { text: "OK", onPress: () => router.back() },
+        ]);
       }
     };
 
     loadMajlis();
-  }, [rowId]);
+
+    return () => {
+      isActive = false;
+    };
+  }, [rowId, router]);
 
   const handleUpdateMajlis = async () => {
-    if (!rowId) {
-      console.warn("Majlis row ID is missing");
-      return;
-    }
+    if (isSaving || !rowId || !original) return;
 
     if (!title.trim() || !selectedCategory || !location.trim()) {
-      console.warn("Please fill all required fields");
+      Alert.alert(
+        "Missing information",
+        "Please fill in the title, category and location.",
+      );
       return;
     }
 
-    try {
-      let finalPosterFileId = posterFileId;
+    setIsSaving(true);
 
-      let eventLatitude = savedCoordinates?.latitude ?? 0;
-      let eventLongitude = savedCoordinates?.longitude ?? 0;
+    try {
+      const changes: Partial<MajlisFormInput> = {};
+
+      if (title.trim() !== original.name) {
+        changes.title = title.trim();
+      }
+
+      if (selectedCategory !== original.category) {
+        changes.category = selectedCategory;
+      }
+
+      const addressChanged = location.trim() !== original.location;
+
+      if (addressChanged) {
+        changes.address = location.trim();
+      }
 
       if (selectedCoordinates) {
-        eventLatitude = selectedCoordinates.latitude;
-        eventLongitude = selectedCoordinates.longitude;
-      } else if (location.trim() !== originalLocation.trim()) {
-        const results = await Location.geocodeAsync(location.trim());
+        changes.latitude = selectedCoordinates.latitude;
+        changes.longitude = selectedCoordinates.longitude;
+      } else if (addressChanged) {
+        const permission = await Location.requestForegroundPermissionsAsync();
 
-        if (results.length === 0) {
-          console.warn("Unable to find this location");
+        if (!permission.granted) {
+          Alert.alert(
+            "Location permission needed",
+            "Allow location access to find this address, or select the location on the map.",
+          );
           return;
         }
 
-        eventLatitude = results[0].latitude;
-        eventLongitude = results[0].longitude;
+        const results = await Location.geocodeAsync(location.trim());
+
+        if (results.length === 0) {
+          Alert.alert(
+            "Address not found",
+            "We couldn't find this address. Try a more complete address or select it on the map.",
+          );
+          return;
+        }
+
+        changes.latitude = results[0].latitude;
+        changes.longitude = results[0].longitude;
       }
 
-      if (newPoster) {
-        const uploadedPoster = await uploadMajlisPoster(newPoster);
-        finalPosterFileId = uploadedPoster.$id;
+      if (eventDateTime.getTime() !== new Date(original.dateValue).getTime()) {
+        changes.startsAt = eventDateTime;
       }
 
-      const updatedData = {
-        name: title.trim(),
-        category: selectedCategory,
-        location: location.trim(),
-        date: formatEventDate(eventDateTime),
-        time: formatEventTime(eventDateTime),
-        dateValue: eventDateTime.toISOString(),
-        timeOrder: eventDateTime.getTime(),
-        posterFileId: finalPosterFileId,
-        latitude: eventLatitude,
-        longitude: eventLongitude,
-      };
+      if (Object.keys(changes).length === 0 && !newPoster) {
+        Alert.alert("No changes", "You haven't changed anything yet.");
+        return;
+      }
 
-      await updateMajlis(rowId, updatedData);
+      await updateMyMajlis(rowId, changes, newPoster);
 
-      router.back();
+      Alert.alert(
+        "Submitted for review",
+        "Your changes will be visible to everyone once an admin approves them.",
+        [{ text: "OK", onPress: () => router.back() }],
+      );
     } catch (error) {
       console.error("Error updating Majlis:", error);
+      Alert.alert("Couldn't save changes", getErrorMessage(error));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -142,20 +175,20 @@ export default function EditEvent() {
   };
 
   const confirmDeleteMajlis = async () => {
-    if (!rowId) return;
+    if (!rowId || isDeleting) return;
+
+    setIsDeleting(true);
 
     try {
-      await deleteMajlis(rowId);
+      await deleteMyMajlis(rowId);
 
       setDeleteModalVisible(false);
       router.back();
     } catch (error) {
       console.error("Failed to delete Majlis:", error);
-
-      Alert.alert(
-        "Delete Failed",
-        "Unable to delete this Majlis. Please try again.",
-      );
+      Alert.alert("Delete Failed", getErrorMessage(error));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -174,14 +207,23 @@ export default function EditEvent() {
       onLocationChange={setLocation}
       coordinates={selectedCoordinates}
       onCoordinatesChange={setSelectedCoordinates}
-      defaultMapCenter={savedCoordinates}
+      defaultMapCenter={
+        original
+          ? { latitude: original.latitude, longitude: original.longitude }
+          : null
+      }
       actions={
         <>
           <Pressable
             onPress={handleUpdateMajlis}
-            className="flex-1 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
+            disabled={isSaving}
+            className={`flex-1 items-center rounded-xl bg-[#0b6b5a] px-6 py-4 ${
+              isSaving ? "opacity-60" : ""
+            }`}
           >
-            <Text className="font-bold text-white">Submit</Text>
+            <Text className="font-bold text-white">
+              {isSaving ? "Saving..." : "Submit"}
+            </Text>
           </Pressable>
 
           <Pressable

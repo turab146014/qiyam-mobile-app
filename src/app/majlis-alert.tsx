@@ -1,19 +1,25 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MajlisCard from "../components/majlis-card";
 import MajlisMap from "../components/majlis-map";
-import { categories, distanceOptions, filters } from "../constants/majlis";
+import { distanceOptions, filters } from "../constants/majlis";
+import { useCategories } from "../hooks/useCategories";
 import { useCurrentLocation } from "../hooks/useCurrentLocation";
-import { getMajlisRows } from "../services/majlisService";
 import type { Majlis } from "../types/majlis";
 import { getMajlisDateLabel } from "../utils/dateLabel";
-import { calculateDistanceKm } from "../utils/distance";
-import { filterMajlisResults } from "../utils/filterMajlis";
-import { sortMajlisFilters } from "../utils/sortMajlis";
+import {
+  searchMajalis,
+  type MajlisOrdering,
+} from "../services/publicMajlisService";
 
+const ORDERING: Record<string, MajlisOrdering> = {
+  Soonest: "soonest",
+  Latest: "latest",
+  Nearest: "nearest",
+};
 export default function MajlisAlertScreen() {
   const router = useRouter();
   const { userLocation, locationError } = useCurrentLocation();
@@ -26,56 +32,61 @@ export default function MajlisAlertScreen() {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   const [majlisList, setMajlisList] = useState<Majlis[]>([]);
-  const [appwriteLoading, setAppwriteLoading] = useState(false);
-  const [appwriteError, setAppwriteError] = useState("");
+  const [listLoading, setListLoading] = useState(true);
+  const [listError, setListError] = useState("");
+
+  const { categories } = useCategories();
+  const categoryOptions = [{ value: "All", label: "All" }, ...categories];
 
   useEffect(() => {
-    const fetchMajlisData = async () => {
+    const hasLocation = userLocation !== null;
+    const locationDenied = locationError !== "";
+
+    if (!hasLocation && !locationDenied) {
+      return;
+    }
+
+    let isActive = true;
+
+    const loadMajalis = async () => {
+      setListLoading(true);
+      setListError("");
+
       try {
-        setAppwriteLoading(true);
-        setAppwriteError("");
+        const ordering = ORDERING[selectedFilter] ?? "soonest";
 
-        const rows = await getMajlisRows();
+        const result = await searchMajalis({
+          lat: userLocation?.latitude,
+          lng: userLocation?.longitude,
+          radiusKm: hasLocation ? selectedDistance : undefined,
+          category: selectedCategory === "All" ? undefined : selectedCategory,
+          ordering:
+            !hasLocation && ordering === "nearest" ? "soonest" : ordering,
+        });
 
-        setMajlisList(rows);
-      } catch {
-        setAppwriteError("Unable to load Majlis data. Please try again.");
+        if (isActive) {
+          setMajlisList(result.items);
+        }
+      } catch (error) {
+        if (isActive) {
+          console.error("Unable to load majalis:", error);
+          setListError("Unable to load Majlis data. Please try again.");
+        }
       } finally {
-        setAppwriteLoading(false);
+        if (isActive) {
+          setListLoading(false);
+        }
       }
     };
 
-    fetchMajlisData();
-  }, []);
+    loadMajalis();
 
-  const filteredMajlis = useMemo(() => {
-    if (!userLocation) {
-      return [];
-    }
-
-    let results = majlisList.map((item) => {
-      const calculatedDistance = calculateDistanceKm(
-        userLocation.latitude,
-        userLocation.longitude,
-        item.latitude,
-        item.longitude,
-      );
-
-      return {
-        ...item,
-        distanceKm: calculatedDistance,
-        distance: `${calculatedDistance.toFixed(1)} km`,
-      };
-    });
-
-    results = filterMajlisResults(results, selectedCategory, selectedDistance);
-
-    results = sortMajlisFilters(results, selectedFilter);
-
-    return results;
+    return () => {
+      isActive = false;
+    };
   }, [
-    majlisList,
     userLocation,
+    locationError,
     selectedCategory,
     selectedDistance,
     selectedFilter,
@@ -92,7 +103,7 @@ export default function MajlisAlertScreen() {
         date: getMajlisDateLabel(item.dateValue, item.date),
         location: item.location,
         distance: item.distance,
-        posterFileId: item.posterFileId,
+        posterUrl: item.posterUrl ?? "",
         latitude: String(item.latitude),
         longitude: String(item.longitude),
       },
@@ -105,7 +116,7 @@ export default function MajlisAlertScreen() {
         <MajlisMap
           userLocation={userLocation}
           selectedDistance={selectedDistance}
-          majlisList={filteredMajlis}
+          majlisList={majlisList}
           onMarkerPress={handleMajlisPress}
           isFullScreen={true}
         />
@@ -117,7 +128,7 @@ export default function MajlisAlertScreen() {
               params: {
                 mode: "all",
                 selectedDistance: String(selectedDistance),
-                majlisData: JSON.stringify(filteredMajlis),
+                majlisData: JSON.stringify(majlisList),
               },
             })
           }
@@ -178,7 +189,9 @@ export default function MajlisAlertScreen() {
                     numberOfLines={1}
                     ellipsizeMode="tail"
                   >
-                    {selectedCategory}
+                    {categoryOptions.find(
+                      (option) => option.value === selectedCategory,
+                    )?.label ?? selectedCategory}
                   </Text>
 
                   <MaterialCommunityIcons
@@ -225,17 +238,17 @@ export default function MajlisAlertScreen() {
                   elevation: 20,
                 }}
               >
-                {categories.map((category) => (
+                {categoryOptions.map((option) => (
                   <Pressable
-                    key={category}
+                    key={option.value}
                     onPress={() => {
-                      setSelectedCategory(category);
+                      setSelectedCategory(option.value);
                       setShowCategoryDropdown(false);
                     }}
                     className="px-4 py-3 border-b border-gray-200"
                   >
                     <Text className="font-semibold text-[#023f38] text-sm">
-                      {category}
+                      {option.label}
                     </Text>
                   </Pressable>
                 ))}
@@ -305,7 +318,7 @@ export default function MajlisAlertScreen() {
             ))}
           </View>
 
-          {appwriteLoading && (
+          {listLoading && (
             <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
               <Text className="text-[#023f38] font-semibold text-center">
                 Loading Majlis data...
@@ -313,10 +326,10 @@ export default function MajlisAlertScreen() {
             </View>
           )}
 
-          {!appwriteLoading && appwriteError !== "" && (
+          {!listLoading && listError !== "" && (
             <View className="bg-white border border-red-300 rounded-xl p-4">
               <Text className="text-red-600 font-semibold text-center">
-                {appwriteError}
+                {listError}
               </Text>
             </View>
           )}
@@ -326,14 +339,14 @@ export default function MajlisAlertScreen() {
               Nearby Majlis
             </Text>
 
-            {filteredMajlis.length === 0 ? (
+            {majlisList.length === 0 ? (
               <Text className="text-center text-[#023f38] mt-4">
                 No Majlis found for this category.
               </Text>
             ) : (
-              !appwriteLoading &&
-              appwriteError === "" &&
-              filteredMajlis.map((item) => (
+              !listLoading &&
+              listError === "" &&
+              majlisList.map((item) => (
                 <MajlisCard
                   key={item.id}
                   item={item}

@@ -3,13 +3,19 @@ import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import type { LatLng } from "react-native-maps";
-import { Pressable, Text } from "react-native";
+import { Alert, Pressable, Text } from "react-native";
 
 import EventForm from "../components/event-form";
-import { account } from "../services/appwrite";
-import { createMajlis } from "../services/majlisService";
-import { uploadMajlisPoster } from "../services/storageService";
-import { formatEventDate, formatEventTime } from "../utils/eventForm";
+import { ApiError } from "../services/apiClient";
+import { createMyMajlis } from "../services/myMajlisService";
+
+function getCreateErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  return "Something went wrong while saving. Please try again.";
+}
 
 function getInitialDateTime() {
   const now = new Date();
@@ -29,73 +35,89 @@ export default function CreateMajlis() {
   const [selectedImage, setSelectedImage] =
     useState<ImagePicker.ImagePickerAsset | null>(null);
   const [eventDateTime, setEventDateTime] = useState(getInitialDateTime);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreateEvent = async () => {
+    if (isSubmitting) return;
+
     if (!selectedImage) {
-      console.warn("Event image is required");
+      Alert.alert("Poster required", "Please add a poster for the event.");
       return;
     }
 
     if (!title.trim()) {
-      console.warn("Event title is required");
+      Alert.alert("Title required", "Please enter the event title.");
       return;
     }
 
     if (!selectedCategory) {
-      console.warn("Category is required");
+      Alert.alert("Category required", "Please select a category.");
       return;
     }
 
     if (!location.trim()) {
-      console.warn("Event location is required");
+      Alert.alert(
+        "Location required",
+        "Please enter the address or select it on the map.",
+      );
       return;
     }
 
-    const permission = await Location.requestForegroundPermissionsAsync();
+    setIsSubmitting(true);
 
-    if (!permission.granted) {
-      console.warn("Location permission is required");
-      return;
-    }
+    try {
+      let coordinates = selectedCoordinates;
 
-    let eventLatitude: number;
-    let eventLongitude: number;
+      if (!coordinates) {
+        const permission = await Location.requestForegroundPermissionsAsync();
 
-    if (selectedCoordinates) {
-      eventLatitude = selectedCoordinates.latitude;
-      eventLongitude = selectedCoordinates.longitude;
-    } else {
-      const results = await Location.geocodeAsync(location.trim());
+        if (!permission.granted) {
+          Alert.alert(
+            "Location permission needed",
+            "Allow location access to find this address, or select the location on the map.",
+          );
+          return;
+        }
 
-      if (results.length === 0) {
-        console.warn("Unable to find this location");
-        return;
+        const results = await Location.geocodeAsync(location.trim());
+
+        if (results.length === 0) {
+          Alert.alert(
+            "Address not found",
+            "We couldn't find this address. Try a more complete address or select it on the map.",
+          );
+          return;
+        }
+
+        coordinates = {
+          latitude: results[0].latitude,
+          longitude: results[0].longitude,
+        };
       }
 
-      eventLatitude = results[0].latitude;
-      eventLongitude = results[0].longitude;
+      await createMyMajlis(
+        {
+          title: title.trim(),
+          category: selectedCategory,
+          address: location.trim(),
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
+          startsAt: eventDateTime,
+        },
+        selectedImage,
+      );
+
+      Alert.alert(
+        "Submitted for review",
+        "Your majlis will be visible to everyone once an admin approves it.",
+        [{ text: "OK", onPress: () => router.back() }],
+      );
+    } catch (error) {
+      console.error("Failed to create Majlis:", error);
+      Alert.alert("Couldn't create event", getCreateErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const user = await account.get();
-    const uploadedPoster = await uploadMajlisPoster(selectedImage);
-
-    const eventData = {
-      userId: user.$id,
-      name: title.trim(),
-      category: selectedCategory,
-      location: location.trim(),
-      description: "",
-      latitude: eventLatitude,
-      longitude: eventLongitude,
-      date: formatEventDate(eventDateTime),
-      time: formatEventTime(eventDateTime),
-      dateValue: eventDateTime.toISOString(),
-      timeOrder: eventDateTime.getTime(),
-      posterFileId: uploadedPoster.$id,
-    };
-
-    await createMajlis(eventData);
-    router.back();
   };
 
   return (
@@ -117,9 +139,14 @@ export default function CreateMajlis() {
         <>
           <Pressable
             onPress={handleCreateEvent}
-            className="flex-1 items-center rounded-xl bg-[#0b6b5a] px-6 py-4"
+            disabled={isSubmitting}
+            className={`flex-1 items-center rounded-xl bg-[#0b6b5a] px-6 py-4 ${
+              isSubmitting ? "opacity-60" : ""
+            }`}
           >
-            <Text className="font-bold text-white">Create</Text>
+            <Text className="font-bold text-white">
+              {isSubmitting ? "Creating..." : "Create"}
+            </Text>
           </Pressable>
 
           <Pressable

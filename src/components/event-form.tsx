@@ -17,7 +17,7 @@ import * as Location from "expo-location";
 import type { LatLng } from "react-native-maps";
 
 import LocationPickerModal from "./Location-Picker-Modal";
-import { categories } from "../constants/majlis";
+import { useCategories } from "@/hooks/useCategories";
 import {
   formatEventDateShort,
   formatEventTime,
@@ -73,6 +73,13 @@ export default function EventForm({
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [mapCenter, setMapCenter] = useState<LatLng>(DEFAULT_MAP_CENTER);
+  const {
+    categories,
+    categoriesLoading,
+    categoriesError,
+    reloadCategories,
+    getCategoryLabel,
+  } = useCategories();
 
   const handlePickPoster = async () => {
     try {
@@ -242,10 +249,15 @@ export default function EventForm({
 
           <Pressable
             onPress={() => setShowCategories(!showCategories)}
+            disabled={categoriesLoading}
             className="min-h-14 flex-row items-center justify-between rounded-xl border border-[#d6a85c] bg-white px-4 py-3"
           >
             <Text className="text-gray-700">
-              {category || "Select category"}
+              {category
+                ? getCategoryLabel(category)
+                : categoriesLoading
+                  ? "Loading categories..."
+                  : "Select category"}
             </Text>
 
             <MaterialCommunityIcons
@@ -257,20 +269,31 @@ export default function EventForm({
 
           {showCategories && (
             <View className="mt-2 rounded-xl border border-[#d6a85c] bg-white">
-              {categories
-                .filter((item) => item !== "All")
-                .map((item) => (
-                  <Pressable
-                    key={item}
-                    onPress={() => {
-                      onCategoryChange(item);
-                      setShowCategories(false);
-                    }}
-                    className="border-b border-gray-200 px-4 py-3"
-                  >
-                    <Text className="text-[#023f38]">{item}</Text>
-                  </Pressable>
-                ))}
+              {categories.map((item) => (
+                <Pressable
+                  key={item.value}
+                  onPress={() => {
+                    onCategoryChange(item.value);
+                    setShowCategories(false);
+                  }}
+                  className="border-b border-gray-200 px-4 py-3"
+                >
+                  <Text className="text-[#023f38]">{item.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+          {categoriesError !== "" && (
+            <View className="mt-2 flex-row items-center justify-between">
+              <Text className="flex-1 text-sm text-red-500">
+                {categoriesError}
+              </Text>
+
+              <Pressable onPress={reloadCategories} className="ml-3">
+                <Text className="text-sm font-semibold text-[#0b6b5a]">
+                  Try again
+                </Text>
+              </Pressable>
             </View>
           )}
         </View>

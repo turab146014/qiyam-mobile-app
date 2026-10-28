@@ -2,35 +2,24 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { KeyboardAvoidingView, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppwriteException } from "react-native-appwrite";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { ApiError } from "@/services/apiClient";
 
 import AuthButton from "../../components/auth/AuthButton";
 import AuthInput from "../../components/auth/AuthInput";
 import PasswordInput from "../../components/auth/PasswordInput";
 
 import { createAccount } from "../../services/auth/authService";
-import { createOtpRecord } from "../../services/auth/otpService";
-import { generateOtp } from "../../utils/auth/generateOtp";
 import { getPasswordStrength } from "../../utils/auth/passwordStrength";
 
 function getSignupErrorMessage(error: unknown): string {
-  if (error instanceof AppwriteException) {
-    if (error.code === 409) {
-      return "An account with this email already exists. Please sign in instead.";
-    }
-
-    if (error.code === 429) {
-      return "Too many attempts. Please wait a few minutes and try again.";
-    }
-
-    if (error.code === 400) {
-      return "Some details were not accepted. Please check them and try again.";
-    }
+  if (error instanceof ApiError) {
+    return error.message;
   }
 
-  return "Couldn't create your account. Please check your internet connection and try again.";
+  return "Couldn't create your account. Please try again.";
 }
+
 export default function SignUp() {
   const router = useRouter();
 
@@ -119,26 +108,13 @@ export default function SignUp() {
     }
 
     setIsSubmitting(true);
-    let accountCreated = false;
 
     try {
-      const user = await createAccount({
+      await createAccount({
         email,
         password,
         username,
         phone,
-        cnic,
-      });
-
-      accountCreated = true;
-
-      const otp = generateOtp();
-
-      await createOtpRecord({
-        userId: user.$id,
-        email,
-        otp,
-        purpose: "signup",
       });
 
       router.push({
@@ -150,14 +126,7 @@ export default function SignUp() {
       });
     } catch (error) {
       console.error("Signup failed:", error);
-
-      if (accountCreated) {
-        setSignupError(
-          "Your account was created, but we couldn't send the verification code. Please try again later or contact support.",
-        );
-      } else {
-        setSignupError(getSignupErrorMessage(error));
-      }
+      setSignupError(getSignupErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }

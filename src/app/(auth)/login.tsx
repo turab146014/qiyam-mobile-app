@@ -2,26 +2,35 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppwriteException } from "react-native-appwrite";
+import { ApiError } from "@/services/apiClient";
 
 import AuthButton from "../../components/auth/AuthButton";
 import AuthInput from "../../components/auth/AuthInput";
 import PasswordInput from "../../components/auth/PasswordInput";
 
-import { loginAccount } from "../../services/auth/authService";
+import {
+  loginAccount,
+  resendVerification,
+} from "../../services/auth/authService";
 
 function getLoginErrorMessage(error: unknown): string {
-  if (error instanceof AppwriteException) {
-    if (error.code === 401) {
-      return "Incorrect email or password.";
+  if (error instanceof ApiError) {
+    if (error.isNetworkError) {
+      return error.message;
     }
 
-    if (error.code === 429) {
-      return "Too many attempts. Please wait a few minutes and try again.";
+    if (error.status === 401) {
+      return error.detail ?? "Incorrect email/username or password.";
     }
+
+    if (error.status === 429) {
+      return error.detail ?? "Too many attempts. Please wait and try again.";
+    }
+
+    return error.message;
   }
 
-  return "Couldn't sign in. Please check your internet connection and try again.";
+  return "Couldn't sign in. Please try again.";
 }
 
 export default function Login() {
@@ -52,18 +61,40 @@ export default function Login() {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       await loginAccount(identifier, password);
 
       router.replace("/post-event");
     } catch (error) {
       if (
-        error instanceof AppwriteException &&
-        error.type === "user_session_already_exists"
+        error instanceof ApiError &&
+        error.status === 403 &&
+        error.code === "email_not_verified"
       ) {
-        router.replace("/post-event");
+        const typed = identifier.trim();
+
+        if (!typed.includes("@")) {
+          setLoginError(
+            "Please verify your email first. Sign in with your email address to get a new code.",
+          );
+          return;
+        }
+
+        try {
+          await resendVerification(typed);
+        } catch (resendError) {
+          console.error("Resend verification failed:", resendError);
+        }
+
+        router.push({
+          pathname: "/verify-otp",
+          params: { purpose: "signup", email: typed },
+        });
         return;
       }
+
       console.error("Login failed:", error);
       setLoginError(getLoginErrorMessage(error));
     } finally {

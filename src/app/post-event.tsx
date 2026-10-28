@@ -4,14 +4,22 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 
 import MajlisCard from "../components/majlis-card";
-import { account } from "../services/appwrite";
-import { logoutAccount } from "../services/auth/authService";
-import { deleteMajlis, getMajlisRows } from "../services/majlisService";
+import { getCurrentUser, logoutAccount } from "../services/auth/authService";
+import {
+  deleteMyMajlis,
+  getMyMajalis,
+  type MyMajlisTab,
+} from "../services/myMajlisService";
 import type { Majlis } from "../types/majlis";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
 
 import MajlisCardSkeleton from "../components/Majlis-Card-Skeleton";
 
+const TAB_VALUES: Record<string, MyMajlisTab> = {
+  Upcoming: "upcoming",
+  Outdated: "past",
+  Rejected: "rejected",
+};
 export default function PostMajlis() {
   const router = useRouter();
 
@@ -26,26 +34,23 @@ export default function PostMajlis() {
   const [loadError, setLoadError] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const [currentTime, setCurrentTime] = useState(0);
-
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
-
-      setCurrentTime(Date.now());
 
       const loadMajalis = async () => {
         setIsLoading(true);
         setLoadError(false);
 
         try {
-          const user = await account.get();
-          const rows = await getMajlisRows(user.$id);
+          const [user, rows] = await Promise.all([
+            getCurrentUser(),
+            getMyMajalis(TAB_VALUES[selectedStatus]),
+          ]);
 
           if (!isActive) return;
 
-          setUserName(user.name);
+          setUserName(user.username);
           setMajalis(rows);
         } catch (error) {
           if (isActive) {
@@ -64,22 +69,8 @@ export default function PostMajlis() {
       return () => {
         isActive = false;
       };
-    }, []),
+    }, [selectedStatus]),
   );
-
-  const filteredMajalis = majalis.filter((item) => {
-    const eventTime = new Date(item.dateValue).getTime();
-
-    if (selectedStatus === "Upcoming") {
-      return eventTime > currentTime;
-    }
-
-    if (selectedStatus === "Outdated") {
-      return eventTime <= currentTime;
-    }
-
-    return false;
-  });
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -111,7 +102,7 @@ export default function PostMajlis() {
     setIsDeleting(true);
 
     try {
-      await deleteMajlis(selectedMajlisId);
+      await deleteMyMajlis(selectedMajlisId);
 
       setMajalis((previous) =>
         previous.filter((item) => item.rowId !== selectedMajlisId),
@@ -203,7 +194,7 @@ export default function PostMajlis() {
             Unable to load events. Please try again.
           </Text>
         </View>
-      ) : filteredMajalis.length === 0 ? (
+      ) : majalis.length === 0 ? (
         <View className="items-center py-8">
           <MaterialCommunityIcons
             name="calendar-blank-outline"
@@ -215,7 +206,7 @@ export default function PostMajlis() {
           </Text>
         </View>
       ) : (
-        filteredMajalis.map((item) => (
+        majalis.map((item) => (
           <MajlisCard
             key={item.id}
             item={item}

@@ -22,7 +22,7 @@ export default function MajlisFullMapScreen() {
     date,
     location,
     distance,
-    posterFileId,
+    posterUrl,
     latitude,
     longitude,
     selectedDistance,
@@ -54,7 +54,8 @@ export default function MajlisFullMapScreen() {
         timeOrder: 0,
         latitude: majlisLatitude,
         longitude: majlisLongitude,
-        posterFileId: String(posterFileId ?? ""),
+        posterFileId: "",
+        posterUrl: String(posterUrl ?? ""),
       }
     : null;
 
@@ -92,7 +93,7 @@ export default function MajlisFullMapScreen() {
         date: getMajlisDateLabel(item.dateValue, item.date),
         location: item.location,
         distance: item.distance,
-        posterFileId: item.posterFileId,
+        posterUrl: item.posterUrl ?? "",
         latitude: String(item.latitude),
         longitude: String(item.longitude),
       },
@@ -167,7 +168,6 @@ export default function MajlisFullMapScreen() {
           }}
         >
           <MaterialCommunityIcons name="directions" size={26} color="#025e44" />
-
         </Pressable>
       )}
 
