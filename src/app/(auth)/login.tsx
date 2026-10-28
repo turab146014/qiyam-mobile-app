@@ -2,12 +2,27 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppwriteException } from "react-native-appwrite";
 
 import AuthButton from "../../components/auth/AuthButton";
 import AuthInput from "../../components/auth/AuthInput";
 import PasswordInput from "../../components/auth/PasswordInput";
 
 import { loginAccount } from "../../services/auth/authService";
+
+function getLoginErrorMessage(error: unknown): string {
+  if (error instanceof AppwriteException) {
+    if (error.code === 401) {
+      return "Incorrect email or password.";
+    }
+
+    if (error.code === 429) {
+      return "Too many attempts. Please wait a few minutes and try again.";
+    }
+  }
+
+  return "Couldn't sign in. Please check your internet connection and try again.";
+}
 
 export default function Login() {
   const router = useRouter();
@@ -19,8 +34,10 @@ export default function Login() {
   const [identifierError, setIdentifierError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSignIn = async () => {
+    if (isSubmitting) return;
     setIdentifierError("");
     setPasswordError("");
     setLoginError("");
@@ -40,8 +57,17 @@ export default function Login() {
 
       router.replace("/post-event");
     } catch (error) {
+      if (
+        error instanceof AppwriteException &&
+        error.type === "user_session_already_exists"
+      ) {
+        router.replace("/post-event");
+        return;
+      }
       console.error("Login failed:", error);
-      setLoginError("Unable to sign in. Please check your email and password.");
+      setLoginError(getLoginErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -105,7 +131,11 @@ export default function Login() {
           </Text>
         )}
 
-        <AuthButton title="Sign In" onPress={handleSignIn} />
+        <AuthButton
+          title={isSubmitting ? "Signing in..." : "Sign In"}
+          onPress={handleSignIn}
+          disabled={isSubmitting}
+        />
 
         <View className="mt-8 flex-row justify-center">
           <Text className="text-gray-600">Don&apos;t have an account? </Text>

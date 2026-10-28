@@ -1,8 +1,13 @@
 import { ExecutionMethod } from "react-native-appwrite";
 import { functions, appwriteConfig } from "../appwrite";
 
+type FunctionResponse = {
+  success?: boolean;
+  message?: string;
+};
+
 export const sendForgotPasswordOtp = async (email: string) => {
-  return functions.createExecution({
+  const execution = await functions.createExecution({
     functionId: appwriteConfig.forgotPasswordFunctionId,
     body: JSON.stringify({
       email: email.trim(),
@@ -13,6 +18,22 @@ export const sendForgotPasswordOtp = async (email: string) => {
       "Content-Type": "application/json",
     },
   });
+
+  if (execution.responseStatusCode !== 200) {
+    throw new Error("Forgot password function failed");
+  }
+
+  let result: FunctionResponse | null = null;
+
+  try {
+    result = JSON.parse(execution.responseBody);
+  } catch {
+    result = null;
+  }
+
+  if (result?.success === false) {
+    throw new Error(result.message || "Unable to send OTP.");
+  }
 };
 
 export const resetPassword = async (email: string, newPassword: string) => {
@@ -27,11 +48,17 @@ export const resetPassword = async (email: string, newPassword: string) => {
     async: false,
   });
 
-  const result = JSON.parse(execution.responseBody);
+  let result: FunctionResponse;
 
-  if (!result.success) {
-    throw new Error(result.message);
+  try {
+    result = JSON.parse(execution.responseBody);
+  } catch {
+    throw new Error("Unable to reset password right now. Please try again.");
   }
 
-  return true;
+  if (!result.success) {
+    throw new Error(
+      result.message || "Unable to reset password. Please try again.",
+    );
+  }
 };

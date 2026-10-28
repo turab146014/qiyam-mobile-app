@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { KeyboardAvoidingView, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppwriteException } from "react-native-appwrite";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import AuthButton from "../../components/auth/AuthButton";
@@ -13,6 +14,23 @@ import { createOtpRecord } from "../../services/auth/otpService";
 import { generateOtp } from "../../utils/auth/generateOtp";
 import { getPasswordStrength } from "../../utils/auth/passwordStrength";
 
+function getSignupErrorMessage(error: unknown): string {
+  if (error instanceof AppwriteException) {
+    if (error.code === 409) {
+      return "An account with this email already exists. Please sign in instead.";
+    }
+
+    if (error.code === 429) {
+      return "Too many attempts. Please wait a few minutes and try again.";
+    }
+
+    if (error.code === 400) {
+      return "Some details were not accepted. Please check them and try again.";
+    }
+  }
+
+  return "Couldn't create your account. Please check your internet connection and try again.";
+}
 export default function SignUp() {
   const router = useRouter();
 
@@ -33,8 +51,10 @@ export default function SignUp() {
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [signupError, setSignupError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSignup = async () => {
+    if (isSubmitting) return;
     setSignupError("");
     setEmailError("");
     setUsernameError("");
@@ -98,6 +118,9 @@ export default function SignUp() {
       return;
     }
 
+    setIsSubmitting(true);
+    let accountCreated = false;
+
     try {
       const user = await createAccount({
         email,
@@ -106,6 +129,8 @@ export default function SignUp() {
         phone,
         cnic,
       });
+
+      accountCreated = true;
 
       const otp = generateOtp();
 
@@ -124,8 +149,17 @@ export default function SignUp() {
         },
       });
     } catch (error) {
-      console.log("Signup error:", error);
-      setSignupError("Unable to create account. Please try again.");
+      console.error("Signup failed:", error);
+
+      if (accountCreated) {
+        setSignupError(
+          "Your account was created, but we couldn't send the verification code. Please try again later or contact support.",
+        );
+      } else {
+        setSignupError(getSignupErrorMessage(error));
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -277,7 +311,11 @@ export default function SignUp() {
             </Text>
           )}
 
-          <AuthButton title="Sign Up" onPress={handleSignup} />
+          <AuthButton
+            title={isSubmitting ? "Creating account..." : "Sign Up"}
+            onPress={handleSignup}
+            disabled={isSubmitting}
+          />
 
           <View className="mt-6 flex-row justify-center">
             <Text className="text-gray-600">Already have an account? </Text>

@@ -1,13 +1,26 @@
 import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppwriteException } from "react-native-appwrite";
 
 import AuthButton from "../../components/auth/AuthButton";
 import PasswordInput from "../../components/auth/PasswordInput";
 
 import { resetPassword } from "../../services/auth/forgotPasswordService";
 import { getPasswordStrength } from "../../utils/auth/passwordStrength";
+
+function getResetErrorMessage(error: unknown): string {
+  if (error instanceof AppwriteException || error instanceof TypeError) {
+    return "Couldn't reset your password. Please check your internet connection and try again.";
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "Unable to reset password. Please try again.";
+}
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -21,8 +34,10 @@ export default function ResetPassword() {
 
   const [newPasswordError, setNewPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleResetPassword = async () => {
+    if (isResetting) return;
     setNewPasswordError("");
     setConfirmPasswordError("");
 
@@ -51,17 +66,21 @@ export default function ResetPassword() {
       return;
     }
 
+    setIsResetting(true);
+
     try {
       await resetPassword(email, newPassword);
-      router.dismissTo("/login");
+
+      Alert.alert(
+        "Password updated",
+        "Your password has been changed. Please sign in with your new password.",
+        [{ text: "OK", onPress: () => router.dismissTo("/login") }],
+      );
     } catch (error) {
       console.error("Password reset failed:", error);
-
-      if (error instanceof Error) {
-        setNewPasswordError(error.message);
-      } else {
-        setNewPasswordError("Unable to reset password");
-      }
+      setNewPasswordError(getResetErrorMessage(error));
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -122,7 +141,11 @@ export default function ResetPassword() {
           )}
         </View>
 
-        <AuthButton title="Reset Password" onPress={handleResetPassword} />
+        <AuthButton
+          title={isResetting ? "Updating..." : "Reset Password"}
+          onPress={handleResetPassword}
+          disabled={isResetting}
+        />
       </View>
     </SafeAreaView>
   );

@@ -13,8 +13,10 @@ export default function ForgotPassword() {
 
   const [emailAddress, setEmailAddress] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   const handleSendOtp = async () => {
+    if (isSending) return;
     setEmailError("");
 
     const trimmedEmail = emailAddress.trim();
@@ -31,12 +33,10 @@ export default function ForgotPassword() {
       return;
     }
 
-    try {
-      const execution = await sendForgotPasswordOtp(trimmedEmail);
+    setIsSending(true);
 
-      if (execution.responseStatusCode !== 200) {
-        throw new Error("Forgot password function failed");
-      }
+    try {
+      await sendForgotPasswordOtp(trimmedEmail);
 
       router.push({
         pathname: "/verify-otp",
@@ -47,7 +47,11 @@ export default function ForgotPassword() {
       });
     } catch (error) {
       console.error("Send OTP failed:", error);
-      setEmailError("Unable to send OTP. Please try again.");
+      setEmailError(
+        "Unable to send OTP. Please check your internet connection and try again.",
+      );
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -83,7 +87,11 @@ export default function ForgotPassword() {
           )}
         </View>
 
-        <AuthButton title="Send OTP" onPress={handleSendOtp} />
+        <AuthButton
+          title={isSending ? "Sending..." : "Send OTP"}
+          onPress={handleSendOtp}
+          disabled={isSending}
+        />
       </View>
     </SafeAreaView>
   );

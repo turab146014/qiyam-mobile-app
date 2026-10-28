@@ -6,12 +6,14 @@ type DeleteConfirmModalProps = {
   visible: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  isDeleting?: boolean;
 };
 
 export default function DeleteConfirmModal({
   visible,
   onCancel,
   onConfirm,
+  isDeleting = false,
 }: DeleteConfirmModalProps) {
   return (
     <Modal
@@ -41,6 +43,7 @@ export default function DeleteConfirmModal({
           <View className="mt-7 w-full flex-row gap-3">
             <Pressable
               onPress={onCancel}
+              disabled={isDeleting}
               className="flex-1 items-center rounded-xl border border-gray-300 bg-white py-4"
             >
               <Text className="font-semibold text-gray-700">
@@ -50,10 +53,11 @@ export default function DeleteConfirmModal({
 
             <Pressable
               onPress={onConfirm}
+              disabled={isDeleting}
               className="flex-1 items-center rounded-xl bg-red-600 py-4"
             >
               <Text className="font-semibold text-white">
-                Delete
+                {isDeleting ? "Deleting..." : "Delete"}
               </Text>
             </Pressable>
           </View>

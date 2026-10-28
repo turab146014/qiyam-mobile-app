@@ -75,15 +75,23 @@ export default function EventForm({
   const [mapCenter, setMapCenter] = useState<LatLng>(DEFAULT_MAP_CENTER);
 
   const handlePickPoster = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [3, 4],
-      quality: 0.8,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [3, 4],
+        quality: 0.8,
+      });
 
-    if (!result.canceled && result.assets.length > 0) {
-      onPosterChange(result.assets[0]);
+      if (!result.canceled && result.assets.length > 0) {
+        onPosterChange(result.assets[0]);
+      }
+    } catch (error) {
+      console.error("Unable to open image library:", error);
+      Alert.alert(
+        "Couldn't open gallery",
+        "Please try again. If it keeps happening, check that Qiyam is allowed to access your photos.",
+      );
     }
   };
 

@@ -8,7 +8,7 @@ type Coordinates = {
 
 export const useCurrentLocation = () => {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(true);
   const [locationError, setLocationError] = useState("");
 
   useEffect(() => {

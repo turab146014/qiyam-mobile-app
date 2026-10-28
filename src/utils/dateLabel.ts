@@ -6,6 +6,9 @@ export const getMajlisDateLabel = (dateValue: string, fallbackDate: string) => {
   const today = new Date();
 
   const majlisDate = new Date(`${dateValue}T00:00:00`);
+  if(Number.isNaN(majlisDate.getTime())) {
+    return fallbackDate;
+  }
 
   const startOfToday = new Date(
     today.getFullYear(),

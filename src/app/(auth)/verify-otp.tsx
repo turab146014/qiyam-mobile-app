@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppwriteException } from "react-native-appwrite";
 
 import AuthButton from "../../components/auth/AuthButton";
 import {
@@ -9,6 +10,18 @@ import {
   verifyForgotPasswordOtp,
   resendOtp,
 } from "../../services/auth/otpService";
+
+function getOtpErrorMessage(error: unknown): string {
+  if (error instanceof AppwriteException || error instanceof TypeError) {
+    return "Couldn't verify the code. Please check your internet connection and try again.";
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "Unable to verify OTP. Please try again.";
+}
 
 export default function VerifyOtp() {
   const router = useRouter();
@@ -24,6 +37,7 @@ export default function VerifyOtp() {
 
   const [loadingResend, setLoadingResend] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const verificationTarget = phone ?? email;
 
@@ -40,6 +54,8 @@ export default function VerifyOtp() {
   }, [resendTimer]);
 
   const handleVerifyOtp = async () => {
+    if (isVerifying) return;
+
     setOtpError("");
 
     if (otp.length !== 6) {
@@ -52,45 +68,51 @@ export default function VerifyOtp() {
       return;
     }
 
+    if (!email) {
+      setOtpError("Something went wrong. Please go back and try again.");
+      return;
+    }
+
+    setIsVerifying(true);
+
     try {
       if (purpose === "forgot-password") {
-        await verifyForgotPasswordOtp(email as string, otp);
-      } else {
-        await verifyOtp(email as string, otp);
-      }
+        await verifyForgotPasswordOtp(email, otp);
 
-      if (purpose === "signup") {
-        router.replace("/login");
-      }
-
-      if (purpose === "forgot-password") {
         router.replace({
           pathname: "/reset-password",
-          params: {
-            email: email as string,
-          },
+          params: { email },
         });
+      } else {
+        await verifyOtp(email, otp);
+
+        router.replace("/login");
       }
     } catch (error) {
       console.error("OTP verification failed:", error);
-
-      if (error instanceof Error) {
-        setOtpError(error.message);
-      } else {
-        setOtpError("Unable to verify OTP");
-      }
+      setOtpError(getOtpErrorMessage(error));
+    } finally {
+      setIsVerifying(false);
     }
   };
 
   const handleResendOtp = async () => {
+    if (!email) {
+      setOtpError("Something went wrong. Please go back and try again.");
+      return;
+    }
+
+    setOtpError("");
+
     try {
       setLoadingResend(true);
 
-      await resendOtp(email as string);
+      await resendOtp(email);
 
       setResendTimer(60);
     } catch (error) {
       console.error("Resend OTP failed:", error);
+      setOtpError("Couldn't resend the code. Please try again in a moment.");
     } finally {
       setLoadingResend(false);
     }
@@ -138,7 +160,11 @@ export default function VerifyOtp() {
           )}
         </View>
 
-        <AuthButton title="Verify OTP" onPress={handleVerifyOtp} />
+        <AuthButton
+          title={isVerifying ? "Verifying..." : "Verify OTP"}
+          onPress={handleVerifyOtp}
+          disabled={isVerifying}
+        />
 
         <Pressable
           onPress={handleResendOtp}

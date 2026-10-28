@@ -77,11 +77,18 @@ export const verifyForgotPasswordOtp = async (
     async: false,
     method: ExecutionMethod.POST,
   });
+  
+  let result: {success?: boolean; message?: string};
 
-  const result = JSON.parse(execution.responseBody);
+  try{
+    result = JSON.parse(execution.responseBody);
+  }catch {
+    throw new Error("Unable to verify OTP right now. Please try again.")
+  }
+   
 
   if (!result.success) {
-    throw new Error(result.message);
+    throw new Error(result.message  || "Invalid or expired OTP.");
   }
 
   return true;

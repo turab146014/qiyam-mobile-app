@@ -24,6 +24,8 @@ export default function PostMajlis() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const [currentTime, setCurrentTime] = useState(0);
 
@@ -80,11 +82,21 @@ export default function PostMajlis() {
   });
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+
     try {
       await logoutAccount();
       router.replace("/login");
     } catch (error) {
       console.error("Logout failed:", error);
+      Alert.alert(
+        "Couldn't log out",
+        "Please check your internet connection and try again.",
+      );
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -94,7 +106,9 @@ export default function PostMajlis() {
   };
 
   const confirmDeleteMajlis = async () => {
-    if (!selectedMajlisId) return;
+    if (!selectedMajlisId || isDeleting) return;
+
+    setIsDeleting(true);
 
     try {
       await deleteMajlis(selectedMajlisId);
@@ -112,6 +126,8 @@ export default function PostMajlis() {
         "Delete Failed",
         "Unable to delete this Majlis. Please try again.",
       );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -141,6 +157,7 @@ export default function PostMajlis() {
 
         <Pressable
           onPress={handleLogout}
+          disabled={isLoggingOut}
           className="ml-4 h-11 w-11 items-center justify-center rounded-full bg-[#ffd5d5]"
         >
           <MaterialCommunityIcons name="logout" size={20} color="red" />
