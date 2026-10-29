@@ -3,6 +3,8 @@ import type { Majlis } from "../types/majlis";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View, Text, useWindowDimensions } from "react-native";
 import { useRef, useState, useEffect } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BOTTOM_SHEET_RATIO } from "../constants/majlis";
 
 type MajlisMapProps = {
   userLocation: {
@@ -61,6 +63,12 @@ const MajlisMap = ({
   const [isMapReady, setIsMapReady] = useState(false);
   const hasSetInitialRadiusView = useRef(false);
   const { height } = useWindowDimensions();
+
+  const insets = useSafeAreaInsets();
+
+  const controlsBottom = isModalMap
+    ? insets.bottom + 30
+    : height * BOTTOM_SHEET_RATIO + 16;
 
   const currentRegionRef = useRef<Region>({
     latitude: userLocation?.latitude ?? defaultRegion.latitude,
@@ -124,7 +132,9 @@ const MajlisMap = ({
       edgePadding: {
         top: 50,
         right: 35,
-        bottom: isModalMap ? 50 : height * 0.47 + 30,
+        bottom: isModalMap
+          ? 50 + insets.bottom
+          : height * BOTTOM_SHEET_RATIO + 30,
         left: 35,
       },
       animated: true,
@@ -139,6 +149,7 @@ const MajlisMap = ({
     height,
     initialCenter,
     showRadius,
+    insets.bottom,
   ]);
 
   return (
@@ -272,7 +283,7 @@ const MajlisMap = ({
           style={{
             position: "absolute",
             left: 16,
-            ...(isModalMap ? { bottom: 30 } : { top: 352 }),
+            bottom: controlsBottom,
             width: 47,
             height: 47,
             borderRadius: "100%",

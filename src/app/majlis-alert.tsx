@@ -1,11 +1,21 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState, useRef } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MajlisCard from "../components/majlis-card";
 import MajlisMap from "../components/majlis-map";
-import { distanceOptions, filters } from "../constants/majlis";
+import {
+  BOTTOM_SHEET_RATIO,
+  distanceOptions,
+  filters,
+} from "../constants/majlis";
 import { useCategories } from "../hooks/useCategories";
 import { useCurrentLocation } from "../hooks/useCurrentLocation";
 import type { Majlis } from "../types/majlis";
@@ -23,6 +33,7 @@ const ORDERING: Record<string, MajlisOrdering> = {
 };
 export default function MajlisAlertScreen() {
   const router = useRouter();
+  const { height } = useWindowDimensions();
   const { userLocation, locationError } = useCurrentLocation();
 
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -172,7 +183,7 @@ export default function MajlisAlertScreen() {
             })
           }
           className="absolute right-4 bg-white rounded-full p-3 shadow-md"
-          style={{ bottom: "50%" }}
+          style={{ bottom: height * BOTTOM_SHEET_RATIO + 16 }}
         >
           <MaterialCommunityIcons name="fullscreen" size={26} color="#023f38" />
         </Pressable>
@@ -188,12 +199,17 @@ export default function MajlisAlertScreen() {
 
       <View
         className="absolute bottom-0 left-0 right-0 bg-[#fdf9f4] rounded-t-3xl pt-4"
-        style={{ height: "47%" }}
+        style={{ height: height * BOTTOM_SHEET_RATIO }}
       >
         <ScrollView
           showsVerticalScrollIndicator={true}
           persistentScrollbar={true}
           scrollEventThrottle={200}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 20,
+            paddingBottom: 30,
+          }}
           onScroll={({ nativeEvent }) => {
             const { layoutMeasurement, contentOffset, contentSize } =
               nativeEvent;
