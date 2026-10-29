@@ -20,7 +20,6 @@ import {
 import { useCategories } from "../hooks/useCategories";
 import { useCurrentLocation } from "../hooks/useCurrentLocation";
 import type { Majlis } from "../types/majlis";
-import { getMajlisDateLabel } from "../utils/dateLabel";
 import {
   loadMoreMajalis,
   searchMajalis,
@@ -227,18 +226,7 @@ export default function MajlisAlertScreen() {
   const handleMajlisPress = (item: Majlis) => {
     router.push({
       pathname: "/majlis-alert-detail",
-      params: {
-        id: String(item.id),
-        name: item.name,
-        category: item.category,
-        time: item.time,
-        date: getMajlisDateLabel(item.dateValue, item.date),
-        location: item.location,
-        distance: item.distance,
-        posterUrl: item.posterUrl ?? "",
-        latitude: String(item.latitude),
-        longitude: String(item.longitude),
-      },
+      params: { id: String(item.id) },
     });
   };
 
