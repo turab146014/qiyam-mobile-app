@@ -9,6 +9,8 @@ import EventForm from "../components/event-form";
 import { ApiError } from "../services/apiClient";
 import { createMyMajlis } from "../services/myMajlisService";
 
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+
 function getCreateErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     return error.message;
@@ -25,6 +27,7 @@ function getInitialDateTime() {
 
 export default function CreateMajlis() {
   const router = useRouter();
+  const checkingAuth = useRequireAuth();
 
   const [title, setTitle] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -120,6 +123,9 @@ export default function CreateMajlis() {
     }
   };
 
+  if (checkingAuth) {
+    return null;
+  }
   return (
     <EventForm
       heading="Create New Event"

@@ -82,9 +82,10 @@ export const logoutAccount = async () => {
 
   try {
     if (refresh) {
-      await api.post("/api/auth/logout", { refresh }, false);
+      await api.post("/api/auth/logout", { refresh });
     }
-  } catch {
+  } catch (error) {
+    console.error("Logout request failed:", error);
   } finally {
     await tokenStorage.clear();
   }
