@@ -10,6 +10,7 @@ export type MajlisSearch = {
   radiusKm?: number;
   category?: string;
   ordering?: MajlisOrdering;
+  pageSize?: number;
 };
 
 const toAppPublicMajlis = (item: PublicMajlisApi): Majlis => {
@@ -48,6 +49,7 @@ export const searchMajalis = async (search: MajlisSearch) => {
       radius_km: search.radiusKm,
       category: search.category,
       ordering: search.ordering,
+      page_size: search.pageSize,
     },
     false,
   );
@@ -67,4 +69,18 @@ export const getPublicMajlisById = async (id: string) => {
   );
 
   return toAppPublicMajlis(item);
+};
+
+export const loadMoreMajalis = async (nextUrl: string) => {
+  const page = await api.get<Paginated<PublicMajlisApi>>(
+    nextUrl.replace(/^http:\/\//, "https://"),
+    undefined,
+    false,
+  );
+
+  return {
+    items: page.results.map(toAppPublicMajlis),
+    next: page.next,
+    count: page.count,
+  };
 };
