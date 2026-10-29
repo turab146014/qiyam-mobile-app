@@ -15,6 +15,8 @@ import DeleteConfirmModal from "../components/DeleteConfirmModal";
 
 import MajlisCardSkeleton from "../components/Majlis-Card-Skeleton";
 
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+
 const TAB_VALUES: Record<string, MyMajlisTab> = {
   Upcoming: "upcoming",
   Outdated: "past",
@@ -22,6 +24,7 @@ const TAB_VALUES: Record<string, MyMajlisTab> = {
 };
 export default function PostMajlis() {
   const router = useRouter();
+  const checkingAuth = useRequireAuth();
 
   const [userName, setUserName] = useState("");
   const [majalis, setMajalis] = useState<Majlis[]>([]);
@@ -122,6 +125,9 @@ export default function PostMajlis() {
     }
   };
 
+  if (checkingAuth) {
+    return null;
+  }
   return (
     <ScrollView
       className="flex-1 bg-[#fdf9f4]"

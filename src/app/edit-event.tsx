@@ -16,6 +16,8 @@ import {
 } from "../services/myMajlisService";
 import type { Majlis } from "../types/majlis";
 
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+
 function getErrorMessage(error: unknown): string {
   return error instanceof ApiError
     ? error.message
@@ -24,6 +26,8 @@ function getErrorMessage(error: unknown): string {
 
 export default function EditEvent() {
   const router = useRouter();
+
+  const checkingAuth = useRequireAuth();
   const { rowId } = useLocalSearchParams<{ rowId: string }>();
 
   const [title, setTitle] = useState("");
@@ -192,6 +196,9 @@ export default function EditEvent() {
     }
   };
 
+  if (checkingAuth) {
+    return null;
+  }
   return (
     <EventForm
       heading="Edit Event"
