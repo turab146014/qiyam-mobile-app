@@ -4,14 +4,20 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppwriteException } from "react-native-appwrite";
 
-import AuthButton from "../../components/auth/AuthButton";
+import { verifyForgotPasswordOtp } from "../../services/auth/otpService";
+import { sendForgotPasswordOtp } from "../../services/auth/forgotPasswordService";
 import {
-  verifyOtp,
-  verifyForgotPasswordOtp,
-  resendOtp,
-} from "../../services/auth/otpService";
+  resendVerification,
+  verifyEmail,
+} from "../../services/auth/authService";
+import { ApiError } from "../../services/apiClient";
+
+import AuthButton from "../../components/auth/AuthButton";
 
 function getOtpErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
   if (error instanceof AppwriteException || error instanceof TypeError) {
     return "Couldn't verify the code. Please check your internet connection and try again.";
   }
@@ -36,7 +42,7 @@ export default function VerifyOtp() {
   const [otpError, setOtpError] = useState("");
 
   const [loadingResend, setLoadingResend] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
+  const [resendTimer, setResendTimer] = useState(60);
   const [isVerifying, setIsVerifying] = useState(false);
 
   const verificationTarget = phone ?? email;
@@ -84,9 +90,9 @@ export default function VerifyOtp() {
           params: { email },
         });
       } else {
-        await verifyOtp(email, otp);
+        await verifyEmail(email, otp);
 
-        router.replace("/login");
+        router.replace("/post-event");
       }
     } catch (error) {
       console.error("OTP verification failed:", error);
@@ -107,12 +113,20 @@ export default function VerifyOtp() {
     try {
       setLoadingResend(true);
 
-      await resendOtp(email);
+      if (purpose === "forgot-password") {
+        await sendForgotPasswordOtp(email);
+      } else {
+        await resendVerification(email);
+      }
 
       setResendTimer(60);
     } catch (error) {
       console.error("Resend OTP failed:", error);
-      setOtpError("Couldn't resend the code. Please try again in a moment.");
+      setOtpError(
+        error instanceof ApiError
+          ? error.message
+          : "Couldn't resend the code. Please try again in a moment.",
+      );
     } finally {
       setLoadingResend(false);
     }
