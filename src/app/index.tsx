@@ -86,15 +86,12 @@ export default function HomeScreen() {
                 Share a majlis with the community
               </Text>
             </View>
-
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={26}
-              color="#b47a2b"
-            />
           </Pressable>
 
-          <Pressable className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c]">
+          <Pressable
+            disabled
+            className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c] opacity-60"
+          >
             <View className="h-14 w-14 items-center justify-center rounded-full bg-[#0b6b5a]">
               <MaterialCommunityIcons
                 name="calendar-outline"
@@ -109,18 +106,21 @@ export default function HomeScreen() {
               </Text>
 
               <Text className="mt-1 text-sm text-gray-600">
-                Browse community events
+                Daily prayer timings
               </Text>
             </View>
 
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={26}
-              color="#b47a2b"
-            />
+            <View className="rounded-full bg-[#f3ead8] px-3 py-1">
+              <Text className="text-xs font-semibold text-[#b47a2b]">
+                Coming soon
+              </Text>
+            </View>
           </Pressable>
 
-          <Pressable className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c]">
+          <Pressable
+            disabled
+            className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c] opacity-60"
+          >
             <View className="h-14 w-14 items-center justify-center rounded-full bg-[#0b6b5a]">
               <MaterialCommunityIcons
                 name="newspaper"
@@ -128,25 +128,26 @@ export default function HomeScreen() {
                 color="#fefefd"
               />
             </View>
-
             <View className="ml-4 flex-1">
               <Text className="text-lg font-bold text-gray-900">
                 Community News
               </Text>
 
               <Text className="mt-1 text-sm text-gray-600">
-                Stay updatedwith latest news
+                Stay updated
               </Text>
             </View>
-
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={26}
-              color="#b47a2b"
-            />
+            <View className="rounded-full bg-[#f3ead8] px-3 py-1">
+              <Text className="text-xs font-semibold text-[#b47a2b]">
+                Coming soon
+              </Text>
+            </View>
           </Pressable>
 
-          <Pressable className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c]">
+          <Pressable
+            disabled
+            className="flex-row items-center rounded-2xl bg-white p-4 border border-[#d6a85c] opacity-60"
+          >
             <View className="h-14 w-14 items-center justify-center rounded-full bg-[#0b6b5a]">
               <MaterialCommunityIcons
                 name="hand-heart-outline"
@@ -159,15 +160,14 @@ export default function HomeScreen() {
               <Text className="text-lg font-bold text-gray-900">Donations</Text>
 
               <Text className="mt-1 text-sm text-gray-600">
-                Support community initiatives
+                Support initiatives
               </Text>
             </View>
-
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={26}
-              color="#b47a2b"
-            />
+            <View className="rounded-full bg-[#f3ead8] px-3 py-1">
+              <Text className="text-xs font-semibold text-[#b47a2b]">
+                Coming soon
+              </Text>
+            </View>
           </Pressable>
         </View>
       </View>
