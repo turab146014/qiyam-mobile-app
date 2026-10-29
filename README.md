@@ -1,56 +1,127 @@
-# Welcome to your Expo app 👋
+# Qiyam
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Qiyam is a mobile app for the community to **find majalis nearby** and to
+**post majalis** for others to find. New and edited posts are reviewed by an
+admin before they become public.
 
-## Get started
+- **Majlis Alert** (public): nearby majalis on a list and a map, filtered by
+  category and distance, sorted by soonest, latest or nearest.
+- **Post an Event** (signed in): create, edit and delete your own majalis
+  with a poster, and see their status (pending, approved, rejected).
+- **Accounts**: sign up with email verification, sign in with email or
+  username, and reset a forgotten password.
 
-1. Install dependencies
+## Tech stack
+
+- React Native + Expo (SDK 57), Expo Router, TypeScript
+- NativeWind (Tailwind classes for styling)
+- `react-native-maps`, `expo-location`, `expo-image-picker`
+- `expo-secure-store` for sign-in tokens
+- Backend: **Qiyam API** (docs: https://qiyamapi.14labs.co/api/docs/)
+
+## Requirements
+
+- Node.js 20 or newer, and npm
+- An Android phone (USB debugging on) or an Android emulator
+- Android SDK and a JDK (installing **Android Studio** gives you both)
+- iOS builds need a Mac with Xcode
+
+## Getting started
+
+1. **Clone and install**
 
    ```bash
+   git clone https://github.com/turab146014/qiyam-mobile-app.git
+   cd qiyam-mobile-app
    npm install
    ```
 
-2. Start the app
+2. **Create your settings file**
 
    ```bash
-   npx expo start
+   cp .env.example .env.local
    ```
 
-In the output, you'll find options to open the app in a
+   Then open `.env.local` and fill in the values (see the comments in the
+   file). Ask the team lead for the Google Maps key.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+3. **Build and install the development app** (first time, and after adding
+   native packages)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+   ```bash
+   npx expo run:android
+   ```
 
-## Get a fresh project
+   The first build downloads Android build tools and can take a while.
 
-When you're ready, run:
+4. **Start the app** (day to day)
 
-```bash
-npm run reset-project
+   ```bash
+   npx expo start --lan
+   ```
+
+   Open the Qiyam development app on your phone. The phone and the computer
+   must be on the same Wi-Fi.
+
+After changing `.env.local`, restart with a clean cache: `npx expo start -c`.
+
+## Scripts
+
+| Command | What it does |
+|---|---|
+| `npm start` | Start the development server |
+| `npm run android` | Build and run the Android development app |
+| `npm run ios` | Build and run on iOS (macOS only) |
+| `npm run lint` | Run ESLint |
+| `npx tsc --noEmit` | Type-check the project |
+
+## Project structure
+
+```
+src/
+  app/          Screens (Expo Router: one file = one screen)
+    (auth)/     Login, sign-up, verify code, forgot/reset password
+  components/   Reusable UI (event form, majlis card, map, modals)
+  hooks/        Reusable logic (location, categories, sign-in guard)
+  services/     All API calls (apiClient, config, tokenStorage, ...)
+  types/        TypeScript types
+  utils/        Small helpers (date formatting, labels)
+  constants/    Fixed values (filters, distances)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Screens never call the server directly; they call functions in
+`src/services/`, which all go through `apiClient.ts`.
 
-### Other setup steps
+## How sign-in works
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- Sign-in returns an **access token** (30 minutes) and a **refresh token**.
+  Both are stored in the phone's secure storage.
+- When a request returns 401, the app refreshes the token once and retries.
+  If the refresh fails, the user is sent to Login.
+- The API address comes only from `EXPO_PUBLIC_API_URL` (see
+  `src/services/config.ts`), so it can point to a local or live server
+  without changing any screen.
 
-## Learn more
+## Workflow
 
-To learn more about developing your project with Expo, look at the following resources:
+- Work on a feature branch, then open a pull request into `dev` with a short
+  description, screenshots, and what was tested on which devices.
+- Before a pull request: `npx tsc --noEmit` and `npm run lint` must pass.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Troubleshooting
 
-## Join the community
+- **`ENOSPC: System limit for number of file watchers reached` (Linux):**
+  raise the limit:
 
-Join our community of developers creating universal apps.
+  ```bash
+  echo "fs.inotify.max_user_watches=524288" | sudo tee /etc/sysctl.d/99-inotify.conf
+  sudo sysctl --system
+  ```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **`SDK location not found`:** set `ANDROID_HOME` to your Android SDK
+  folder, or put `sdk.dir=/path/to/Android/Sdk` in `android/local.properties`.
+- **Android build killed / out of memory:** in `android/gradle.properties`
+  set `org.gradle.parallel=false` and `org.gradle.workers.max=1`, and close
+  other apps during the build.
+- **`EXPO_PUBLIC_API_URL is missing`:** create `.env.local` (step 2) and
+  restart with `npx expo start -c`.
