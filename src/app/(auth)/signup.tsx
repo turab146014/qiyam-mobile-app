@@ -26,7 +26,6 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
-  const [cnic, setCnic] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -36,7 +35,6 @@ export default function SignUp() {
   const [emailError, setEmailError] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
-  const [cnicError, setCnicError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [signupError, setSignupError] = useState("");
@@ -48,7 +46,6 @@ export default function SignUp() {
     setEmailError("");
     setUsernameError("");
     setPhoneError("");
-    setCnicError("");
     setPasswordError("");
     setConfirmPasswordError("");
 
@@ -67,23 +64,8 @@ export default function SignUp() {
       return;
     }
 
-    if (phone.trim() === "") {
-      setPhoneError("Phone number is required");
-      return;
-    }
-
-    if (!/^\d{11}$/.test(phone.trim())) {
-      setPhoneError("Phone number must contain 11 digits");
-      return;
-    }
-
-    if (cnic.trim() === "") {
-      setCnicError("CNIC is required");
-      return;
-    }
-
-    if (!/^\d{13}$/.test(cnic.trim())) {
-      setCnicError("CNIC must contain 13 digits");
+    if (phone.trim() !== "" && !/^03\d{9}$/.test(phone.trim())) {
+      setPhoneError("Phone number must be in the format 03XXXXXXXXX");
       return;
     }
 
@@ -126,6 +108,24 @@ export default function SignUp() {
       });
     } catch (error) {
       console.error("Signup failed:", error);
+      if (error instanceof ApiError && Object.keys(error.fields).length > 0) {
+        setEmailError(error.fields.email ?? "");
+        setUsernameError(error.fields.username ?? "");
+        setPhoneError(error.fields.phone ?? "");
+        setPasswordError(error.fields.password ?? "");
+
+        const knownFields = ["email", "username", "phone", "password"];
+        const otherField = Object.entries(error.fields).find(
+          ([field]) => !knownFields.includes(field),
+        );
+
+        if (otherField) {
+          setSignupError(otherField[1]);
+        }
+
+        return;
+      }
+
       setSignupError(getSignupErrorMessage(error));
     } finally {
       setIsSubmitting(false);
@@ -193,12 +193,12 @@ export default function SignUp() {
           )}
 
           <Text className="mb-2 mt-4 font-semibold text-gray-800">
-            Phone No.
+            Phone No. (optional)
           </Text>
 
           <AuthInput
             value={phone}
-            placeholder="Enter your phone number"
+            placeholder="03XXXXXXXXX"
             keyboardType="phone-pad"
             onChangeText={(text) => {
               setPhone(text);
@@ -208,22 +208,6 @@ export default function SignUp() {
 
           {phoneError !== "" && (
             <Text className="mt-1 text-sm text-red-500">{phoneError}</Text>
-          )}
-
-          <Text className="mb-2 mt-4 font-semibold text-gray-800">CNIC</Text>
-
-          <AuthInput
-            value={cnic}
-            placeholder="Enter your CNIC"
-            keyboardType="number-pad"
-            onChangeText={(text) => {
-              setCnic(text);
-              setCnicError("");
-            }}
-          />
-
-          {cnicError !== "" && (
-            <Text className="mt-1 text-sm text-red-500">{cnicError}</Text>
           )}
 
           <Text className="mb-2 mt-4 font-semibold text-gray-800">

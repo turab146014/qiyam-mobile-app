@@ -52,7 +52,7 @@ export default function Login() {
     setLoginError("");
 
     if (identifier.trim() === "") {
-      setIdentifierError("Email, phone number or username is required");
+      setIdentifierError("Email or username is required");
       return;
     }
 
@@ -96,6 +96,18 @@ export default function Login() {
       }
 
       console.error("Login failed:", error);
+
+      if (error instanceof ApiError && Object.keys(error.fields).length > 0) {
+        setIdentifierError(error.fields.identifier ?? "");
+        setPasswordError(error.fields.password ?? "");
+
+        if (!error.fields.identifier && !error.fields.password) {
+          setLoginError(error.message);
+        }
+
+        return;
+      }
+
       setLoginError(getLoginErrorMessage(error));
     } finally {
       setIsSubmitting(false);
@@ -116,12 +128,12 @@ export default function Login() {
         </View>
 
         <Text className="mb-2 font-semibold text-gray-800">
-          Email / Phone No. / Username
+          Email or username
         </Text>
 
         <AuthInput
           value={identifier}
-          placeholder="Enter email, phone number or username"
+          placeholder="Enter your email or username"
           onChangeText={(text) => {
             setIdentifier(text);
             setIdentifierError("");

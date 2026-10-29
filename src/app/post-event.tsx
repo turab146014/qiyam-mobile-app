@@ -19,7 +19,7 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 const TAB_VALUES: Record<string, MyMajlisTab> = {
   Upcoming: "upcoming",
-  Outdated: "past",
+  Past: "past",
   Rejected: "rejected",
 };
 export default function PostMajlis() {
@@ -169,7 +169,7 @@ export default function PostMajlis() {
       </Pressable>
 
       <View className="mt-6 flex-row rounded-2xl bg-[#e8f4f0] p-0.5">
-        {["Upcoming", "Outdated", "Rejected"].map((status) => (
+        {["Upcoming", "Past", "Rejected"].map((status) => (
           <Pressable
             key={status}
             onPress={() => setSelectedStatus(status)}

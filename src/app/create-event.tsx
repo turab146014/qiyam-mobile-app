@@ -97,7 +97,12 @@ export default function CreateMajlis() {
           longitude: results[0].longitude,
         };
       }
-
+      console.log(
+        "Poster:",
+        selectedImage.mimeType,
+        selectedImage.fileSize,
+        selectedImage.fileName,
+      );
       await createMyMajlis(
         {
           title: title.trim(),
