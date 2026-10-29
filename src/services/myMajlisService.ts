@@ -2,6 +2,7 @@ import { api } from "./apiClient";
 import type * as ImagePicker from "expo-image-picker";
 import type { Majlis, MyMajlisApi, Paginated } from "../types/majlis";
 import { formatEventDate, formatEventTime } from "../utils/eventForm";
+import { File } from "expo-file-system";
 
 export type MyMajlisTab = "upcoming" | "past" | "rejected";
 
@@ -85,12 +86,8 @@ const toFormData = (
     form.append(key, value);
   }
 
-  if (poster) {
-    form.append("poster", {
-      uri: poster.uri,
-      name: poster.fileName ?? `poster-${Date.now()}.jpg`,
-      type: poster.mimeType ?? "image/jpeg",
-    } as unknown as Blob);
+    if (poster) {
+    form.append("poster", new File(poster.uri));
   }
 
   return form;
