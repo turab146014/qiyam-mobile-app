@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MajlisCard from "../components/majlis-card";
@@ -11,6 +11,7 @@ import { useCurrentLocation } from "../hooks/useCurrentLocation";
 import type { Majlis } from "../types/majlis";
 import { getMajlisDateLabel } from "../utils/dateLabel";
 import {
+  loadMoreMajalis,
   searchMajalis,
   type MajlisOrdering,
 } from "../services/publicMajlisService";
@@ -35,6 +36,10 @@ export default function MajlisAlertScreen() {
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState("");
 
+  const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const searchVersion = useRef(0);
+
   const { categories } = useCategories();
   const categoryOptions = [{ value: "All", label: "All" }, ...categories];
 
@@ -49,8 +54,10 @@ export default function MajlisAlertScreen() {
     let isActive = true;
 
     const loadMajalis = async () => {
+      searchVersion.current += 1;
       setListLoading(true);
       setListError("");
+      setNextUrl(null);
 
       try {
         const ordering = ORDERING[selectedFilter] ?? "soonest";
@@ -63,6 +70,11 @@ export default function MajlisAlertScreen() {
           ordering:
             !hasLocation && ordering === "nearest" ? "soonest" : ordering,
         });
+
+        if (isActive) {
+          setMajlisList(result.items);
+          setNextUrl(result.next);
+        }
 
         if (isActive) {
           setMajlisList(result.items);
@@ -91,6 +103,33 @@ export default function MajlisAlertScreen() {
     selectedDistance,
     selectedFilter,
   ]);
+
+  const handleLoadMore = async () => {
+    if (!nextUrl || isLoadingMore || listLoading) return;
+
+    const versionAtStart = searchVersion.current;
+    setIsLoadingMore(true);
+
+    try {
+      const more = await loadMoreMajalis(nextUrl);
+
+      if (versionAtStart !== searchVersion.current) return;
+
+      setMajlisList((previous) => {
+        const existingIds = new Set(previous.map((item) => item.id));
+
+        return [
+          ...previous,
+          ...more.items.filter((item) => !existingIds.has(item.id)),
+        ];
+      });
+      setNextUrl(more.next);
+    } catch (error) {
+      console.error("Unable to load more majalis:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   const handleMajlisPress = (item: Majlis) => {
     router.push({
@@ -154,10 +193,17 @@ export default function MajlisAlertScreen() {
         <ScrollView
           showsVerticalScrollIndicator={true}
           persistentScrollbar={true}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingTop: 20,
-            paddingBottom: 30,
+          scrollEventThrottle={200}
+          onScroll={({ nativeEvent }) => {
+            const { layoutMeasurement, contentOffset, contentSize } =
+              nativeEvent;
+
+            const distanceFromBottom =
+              contentSize.height - (layoutMeasurement.height + contentOffset.y);
+
+            if (distanceFromBottom < 200) {
+              handleLoadMore();
+            }
           }}
         >
           <View className="relative" style={{ zIndex: 50 }}>
@@ -354,6 +400,21 @@ export default function MajlisAlertScreen() {
                 />
               ))
             )}
+
+            {isLoadingMore ? (
+              <Text className="mt-2 text-center text-gray-500">
+                Loading more...
+              </Text>
+            ) : null}
+
+            {!listLoading &&
+            !isLoadingMore &&
+            nextUrl === null &&
+            majlisList.length > 0 ? (
+              <Text className="mt-2 text-center text-gray-400">
+                You&apos;ve reached the end
+              </Text>
+            ) : null}
           </View>
         </ScrollView>
       </View>
