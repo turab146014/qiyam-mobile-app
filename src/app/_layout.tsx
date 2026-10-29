@@ -1,18 +1,22 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import "../global.css";
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { useEffect } from "react";
+import { Alert } from "react-native";
+import { Stack, useRouter } from "expo-router";
 
-SplashScreen.preventAutoHideAsync();
+import { setSessionExpiredHandler } from "../services/apiClient";
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
-  );
+export default function RootLayout() {
+  const router = useRouter();
+
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      Alert.alert("Session expired", "Please sign in again.");
+      router.replace("/login");
+    });
+
+    return () => setSessionExpiredHandler(null);
+  }, [router]);
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
