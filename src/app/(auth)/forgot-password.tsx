@@ -6,7 +6,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AuthButton from "../../components/auth/AuthButton";
 import AuthInput from "../../components/auth/AuthInput";
 
-import { sendForgotPasswordOtp } from "../../services/auth/forgotPasswordService";
+import { requestPasswordReset } from "@/services/forgotPasswordService";
+import { ApiError } from "../../services/apiClient";
 
 export default function ForgotPassword() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function ForgotPassword() {
     setIsSending(true);
 
     try {
-      await sendForgotPasswordOtp(trimmedEmail);
+      await requestPasswordReset(trimmedEmail);
 
       router.push({
         pathname: "/verify-otp",
@@ -48,7 +49,9 @@ export default function ForgotPassword() {
     } catch (error) {
       console.error("Send OTP failed:", error);
       setEmailError(
-        "Unable to send OTP. Please check your internet connection and try again.",
+        error instanceof ApiError
+          ? error.message
+          : "Unable to send the code. Please try again.",
       );
     } finally {
       setIsSending(false);
