@@ -11,7 +11,14 @@ import {
   Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { ApiError } from "../services/apiClient";
+import { getPublicMajlisById } from "../services/publicMajlisService";
+import type { Majlis } from "../types/majlis";
+import { getMajlisDateLabel } from "../utils/dateLabel";
+import { useCurrentLocation } from "../hooks/useCurrentLocation";
+import { calculateDistanceKm } from "../utils/distance";
 
 export default function MajlisAlertDetail() {
   const router = useRouter();
@@ -19,24 +26,106 @@ export default function MajlisAlertDetail() {
   const { height } = useWindowDimensions();
   const posterHeight = height * 0.52;
 
-  const {
-    id,
-    name,
-    category,
-    time,
-    date,
-    location,
-    distance,
-    posterUrl,
-    latitude,
-    longitude,
-  } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { userLocation } = useCurrentLocation();
+
+  const [majlis, setMajlis] = useState<Majlis | null>(null);
+  const [loadError, setLoadError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadMajlis = async () => {
+      if (!id) {
+        setLoadError("This majlis could not be found.");
+        return;
+      }
+
+      setLoadError("");
+
+      try {
+        const result = await getPublicMajlisById(id);
+
+        if (isActive) {
+          setMajlis(result);
+        }
+      } catch (error) {
+        if (isActive) {
+          console.error("Unable to load majlis details:", error);
+          setLoadError(
+            error instanceof ApiError && error.status === 404
+              ? "This majlis is no longer available."
+              : error instanceof ApiError
+                ? error.message
+                : "Unable to load this majlis.",
+          );
+        }
+      }
+    };
+
+    loadMajlis();
+
+    return () => {
+      isActive = false;
+    };
+  }, [id, reloadKey]);
+
+  const name = majlis?.name ?? "";
+  const category = majlis?.categoryLabel ?? majlis?.category ?? "";
+  const time = majlis?.time ?? "";
+  const date = majlis ? getMajlisDateLabel(majlis.dateValue, majlis.date) : "";
+  const location = majlis?.location ?? "";
+  const distance = majlis?.distance
+    ? majlis.distance
+    : majlis && userLocation
+      ? `${calculateDistanceKm(
+          userLocation.latitude,
+          userLocation.longitude,
+          majlis.latitude,
+          majlis.longitude,
+        ).toFixed(1)} km`
+      : "—";
+
+  console.log("DISTANCE DEBUG", {
+    serverDistance: majlis?.distance,
+    majlisLat: majlis?.latitude,
+    majlisLng: majlis?.longitude,
+    userLocation,
+  });
+  const posterUrl = majlis?.posterUrl ?? "";
 
   const posterImageUrl =
     typeof posterUrl === "string" && posterUrl.trim() !== "" ? posterUrl : "";
 
   const [isPosterFullScreen, setIsPosterFullScreen] = useState(false);
 
+  if (!majlis) {
+    return (
+      <View className="flex-1 items-center justify-center bg-[#fdf9f4] px-6">
+        {loadError === "" ? (
+          <Text className="text-[#023f38]">Loading majlis...</Text>
+        ) : (
+          <>
+            <Text className="text-center font-semibold text-red-600">
+              {loadError}
+            </Text>
+
+            <Pressable
+              onPress={() => setReloadKey((key) => key + 1)}
+              className="mt-4 rounded-xl bg-[#0b6b5a] px-5 py-2"
+            >
+              <Text className="font-semibold text-white">Try again</Text>
+            </Pressable>
+
+            <Pressable onPress={() => router.back()} className="mt-3">
+              <Text className="font-semibold text-[#0b6b5a]">Go back</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
+    );
+  }
   return (
     <SafeAreaView className="flex-1 bg-[#014037]">
       <View
@@ -175,19 +264,7 @@ export default function MajlisAlertDetail() {
             onPress={() =>
               router.push({
                 pathname: "/majlis-full-map",
-                params: {
-                  mode: "single",
-                  id: String(id),
-                  name: String(name),
-                  category: String(category),
-                  time: String(time),
-                  date: String(date),
-                  location: String(location),
-                  distance: String(distance),
-                  posterUrl: String(posterUrl ?? ""),
-                  latitude: String(latitude),
-                  longitude: String(longitude),
-                },
+                params: { mode: "single", id: String(id) },
               })
             }
             className="bg-[#025e44] rounded-xl py-4 mt-8 mb-8 flex-row items-center justify-center"

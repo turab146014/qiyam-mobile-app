@@ -4,8 +4,8 @@ import { Linking, Pressable, Text, View } from "react-native";
 import MajlisMap from "../components/majlis-map";
 import { useCurrentLocation } from "../hooks/useCurrentLocation";
 import type { Majlis } from "../types/majlis";
-import { getMajlisDateLabel } from "../utils/dateLabel";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getPublicMajlisById } from "../services/publicMajlisService";
 
 export default function MajlisFullMapScreen() {
   const router = useRouter();
@@ -14,50 +14,52 @@ export default function MajlisFullMapScreen() {
   );
   const { userLocation } = useCurrentLocation();
 
-  const {
-    id,
-    name,
-    category,
-    time,
-    date,
-    location,
-    distance,
-    posterUrl,
-    latitude,
-    longitude,
-    selectedDistance,
-    mode,
-    majlisData,
-  } = useLocalSearchParams();
+  const { id, selectedDistance, mode, majlisData } = useLocalSearchParams<{
+    id?: string;
+    selectedDistance?: string;
+    mode?: string;
+    majlisData?: string;
+  }>();
 
   const isAllMode = mode === "all";
-
-  const majlisLatitude = Number(latitude);
-  const majlisLongitude = Number(longitude);
-
   const mapDistance = Number(selectedDistance) || 5;
 
-  const hasValidCoordinates =
-    Number.isFinite(majlisLatitude) && Number.isFinite(majlisLongitude);
+  const [selectedMajlis, setSelectedMajlis] = useState<Majlis | null>(null);
+  const [loadError, setLoadError] = useState("");
 
-  const selectedMajlis: Majlis | null = hasValidCoordinates
-    ? {
-        id: Number(id) || 0,
-        name: String(name ?? ""),
-        category: String(category ?? ""),
-        time: String(time ?? ""),
-        date: String(date ?? ""),
-        dateValue: "",
-        location: String(location ?? ""),
-        distance: String(distance ?? ""),
-        distanceKm: 0,
-        timeOrder: 0,
-        latitude: majlisLatitude,
-        longitude: majlisLongitude,
-        posterFileId: "",
-        posterUrl: String(posterUrl ?? ""),
+  useEffect(() => {
+    if (isAllMode) {
+      return;
+    }
+
+    let isActive = true;
+
+    const loadMajlis = async () => {
+      if (!id) {
+        setLoadError("Unable to load Majlis location.");
+        return;
       }
-    : null;
+
+      try {
+        const result = await getPublicMajlisById(id);
+
+        if (isActive) {
+          setSelectedMajlis(result);
+        }
+      } catch (error) {
+        if (isActive) {
+          console.error("Unable to load majlis for map:", error);
+          setLoadError("Unable to load Majlis location.");
+        }
+      }
+    };
+
+    loadMajlis();
+
+    return () => {
+      isActive = false;
+    };
+  }, [id, isAllMode]);
 
   const directionMajlis = isAllMode ? selectedMapMajlis : selectedMajlis;
 
@@ -85,18 +87,7 @@ export default function MajlisFullMapScreen() {
 
     router.push({
       pathname: "/majlis-alert-detail",
-      params: {
-        id: String(item.id),
-        name: item.name,
-        category: item.category,
-        time: item.time,
-        date: getMajlisDateLabel(item.dateValue, item.date),
-        location: item.location,
-        distance: item.distance,
-        posterUrl: item.posterUrl ?? "",
-        latitude: String(item.latitude),
-        longitude: String(item.longitude),
-      },
+      params: { id: String(item.id) },
     });
   };
 
@@ -104,7 +95,7 @@ export default function MajlisFullMapScreen() {
     return (
       <View className="flex-1 bg-[#fdf9f4] items-center justify-center px-6">
         <Text className="text-[#023f38] font-semibold text-center">
-          Unable to load Majlis location.
+          {loadError === "" ? "Loading map..." : loadError}
         </Text>
 
         <Pressable
