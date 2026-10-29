@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 
-import type { Majlis } from "../types/majlis";
+import type { Majlis, MajlisStatus } from "../types/majlis";
 import { getMajlisDateLabel } from "../utils/dateLabel";
 
 type MajlisCardProps = {
@@ -10,6 +10,15 @@ type MajlisCardProps = {
   onEdit?: () => void;
   onDelete?: () => void;
   showDistance?: boolean;
+};
+
+const STATUS_STYLES: Record<
+  MajlisStatus,
+  { background: string; text: string }
+> = {
+  pending: { background: "bg-amber-100", text: "text-amber-800" },
+  approved: { background: "bg-green-100", text: "text-green-800" },
+  rejected: { background: "bg-red-100", text: "text-red-700" },
 };
 
 export default function MajlisCard({
@@ -68,6 +77,20 @@ export default function MajlisCard({
         )}
       </View>
 
+      {item.status ? (
+        <View className="mt-2 flex-row">
+          <View
+            className={`rounded-full px-3 py-1 ${STATUS_STYLES[item.status].background}`}
+          >
+            <Text
+              className={`text-xs font-semibold ${STATUS_STYLES[item.status].text}`}
+            >
+              {item.statusLabel ?? item.status}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
       <View className="mt-3 flex-row items-center">
         <MaterialCommunityIcons
           name="clock-outline"
@@ -107,6 +130,17 @@ export default function MajlisCard({
           <Text className="ml-2 text-sm text-[#023f38]">{item.distance}</Text>
         </View>
       )}
+
+      {item.status === "rejected" && item.rejectionReason ? (
+        <View className="mt-3 rounded-lg bg-red-50 p-3">
+          <Text className="text-xs font-semibold text-red-700">
+            Reason for rejection
+          </Text>
+          <Text className="mt-1 text-sm text-red-700">
+            {item.rejectionReason}
+          </Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
