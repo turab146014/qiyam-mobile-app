@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState, useRef } from "react";
 import {
+  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -25,6 +26,8 @@ import {
   searchMajalis,
   type MajlisOrdering,
 } from "../services/publicMajlisService";
+import MajlisCardSkeleton from "../components/Majlis-Card-Skeleton";
+import { ApiError } from "../services/apiClient";
 
 const ORDERING: Record<string, MajlisOrdering> = {
   Soonest: "soonest",
@@ -49,6 +52,7 @@ export default function MajlisAlertScreen() {
 
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const searchVersion = useRef(0);
 
   const { categories } = useCategories();
@@ -93,7 +97,11 @@ export default function MajlisAlertScreen() {
       } catch (error) {
         if (isActive) {
           console.error("Unable to load majalis:", error);
-          setListError("Unable to load Majlis data. Please try again.");
+          setListError(
+            error instanceof ApiError
+              ? error.message
+              : "Unable to load majalis. Please try again.",
+          );
         }
       } finally {
         if (isActive) {
@@ -113,8 +121,12 @@ export default function MajlisAlertScreen() {
     selectedCategory,
     selectedDistance,
     selectedFilter,
+    reloadKey,
   ]);
 
+  const retryLoading = () => {
+    setReloadKey((key) => key + 1);
+  };
   const handleLoadMore = async () => {
     if (!nextUrl || isLoadingMore || listLoading) return;
 
@@ -140,6 +152,76 @@ export default function MajlisAlertScreen() {
     } finally {
       setIsLoadingMore(false);
     }
+  };
+
+  const isWaitingForLocation = userLocation === null && locationError === "";
+
+  const listState: "loading" | "error" | "empty" | "ready" =
+    isWaitingForLocation || listLoading
+      ? "loading"
+      : listError !== ""
+        ? "error"
+        : majlisList.length === 0
+          ? "empty"
+          : "ready";
+
+  const selectedCategoryLabel =
+    categoryOptions.find((option) => option.value === selectedCategory)
+      ?.label ?? selectedCategory;
+
+  const categoryText =
+    selectedCategory === "All" ? "" : ` in ${selectedCategoryLabel}`;
+
+  const emptyMessage = userLocation
+    ? `No majalis within ${selectedDistance} km${categoryText}. Try a larger distance or another category.`
+    : `No upcoming majalis${categoryText} right now.`;
+
+  const renderListContent = () => {
+    if (listState === "loading") {
+      return (
+        <>
+          <Text className="text-center text-gray-500">
+            {isWaitingForLocation
+              ? "Finding your location..."
+              : "Loading majalis..."}
+          </Text>
+          {[1, 2, 3].map((item) => (
+            <MajlisCardSkeleton key={item} />
+          ))}
+        </>
+      );
+    }
+
+    if (listState === "error") {
+      return (
+        <View className="items-center rounded-xl border border-red-300 bg-white p-4">
+          <Text className="text-center font-semibold text-red-600">
+            {listError}
+          </Text>
+
+          <Pressable
+            onPress={retryLoading}
+            className="mt-3 rounded-xl bg-[#0b6b5a] px-5 py-2"
+          >
+            <Text className="font-semibold text-white">Try again</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
+    if (listState === "empty") {
+      return (
+        <Text className="mt-4 text-center text-[#023f38]">{emptyMessage}</Text>
+      );
+    }
+
+    return majlisList.map((item) => (
+      <MajlisCard
+        key={item.id}
+        item={item}
+        onPress={() => handleMajlisPress(item)}
+      />
+    ));
   };
 
   const handleMajlisPress = (item: Majlis) => {
@@ -189,14 +271,6 @@ export default function MajlisAlertScreen() {
         </Pressable>
       </View>
 
-      {locationError !== "" && (
-        <View className="bg-white border border-red-300 rounded-xl p-4">
-          <Text className="text-red-600 font-semibold text-center">
-            {locationError}
-          </Text>
-        </View>
-      )}
-
       <View
         className="absolute bottom-0 left-0 right-0 bg-[#fdf9f4] rounded-t-3xl pt-4"
         style={{ height: height * BOTTOM_SHEET_RATIO }}
@@ -223,6 +297,24 @@ export default function MajlisAlertScreen() {
           }}
         >
           <View className="relative" style={{ zIndex: 50 }}>
+            {locationError !== "" ? (
+              <View className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3">
+                <Text className="text-sm text-amber-900">
+                  We can&apos;t get your location, so distances aren&apos;t
+                  shown. You&apos;re seeing all upcoming majalis.
+                </Text>
+
+                <Pressable
+                  onPress={() => Linking.openSettings()}
+                  className="mt-2 self-start"
+                >
+                  <Text className="font-semibold text-[#0b6b5a]">
+                    Open settings to allow location
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
+
             <View className="flex-row gap-3">
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text className="text-base font-semibold text-[#023f38] mb-2">
@@ -380,42 +472,12 @@ export default function MajlisAlertScreen() {
             ))}
           </View>
 
-          {listLoading && (
-            <View className="bg-white border border-[#d6a85c] rounded-xl p-4">
-              <Text className="text-[#023f38] font-semibold text-center">
-                Loading Majlis data...
-              </Text>
-            </View>
-          )}
-
-          {!listLoading && listError !== "" && (
-            <View className="bg-white border border-red-300 rounded-xl p-4">
-              <Text className="text-red-600 font-semibold text-center">
-                {listError}
-              </Text>
-            </View>
-          )}
-
           <View className="mt-6 w-full gap-4">
             <Text className="text-lg font-semibold text-[#023f38] mb-3">
               Nearby Majlis
             </Text>
 
-            {majlisList.length === 0 ? (
-              <Text className="text-center text-[#023f38] mt-4">
-                No Majlis found for this category.
-              </Text>
-            ) : (
-              !listLoading &&
-              listError === "" &&
-              majlisList.map((item) => (
-                <MajlisCard
-                  key={item.id}
-                  item={item}
-                  onPress={() => handleMajlisPress(item)}
-                />
-              ))
-            )}
+            {renderListContent()}
 
             {isLoadingMore ? (
               <Text className="mt-2 text-center text-gray-500">
