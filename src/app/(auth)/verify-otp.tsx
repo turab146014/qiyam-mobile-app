@@ -2,15 +2,17 @@ import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppwriteException } from "react-native-appwrite";
+import { ApiError } from "../../services/apiClient";
 
-import { verifyForgotPasswordOtp } from "../../services/auth/otpService";
-import { sendForgotPasswordOtp } from "../../services/auth/forgotPasswordService";
+import {
+  requestPasswordReset,
+  verifyPasswordResetCode,
+} from "@/services/forgotPasswordService";
+
 import {
   resendVerification,
   verifyEmail,
 } from "../../services/auth/authService";
-import { ApiError } from "../../services/apiClient";
 
 import AuthButton from "../../components/auth/AuthButton";
 
@@ -18,15 +20,8 @@ function getOtpErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     return error.message;
   }
-  if (error instanceof AppwriteException || error instanceof TypeError) {
-    return "Couldn't verify the code. Please check your internet connection and try again.";
-  }
 
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return "Unable to verify OTP. Please try again.";
+  return "Unable to verify the code. Please try again.";
 }
 
 export default function VerifyOtp() {
@@ -83,11 +78,11 @@ export default function VerifyOtp() {
 
     try {
       if (purpose === "forgot-password") {
-        await verifyForgotPasswordOtp(email, otp);
+        const resetToken = await verifyPasswordResetCode(email, otp);
 
         router.replace({
           pathname: "/reset-password",
-          params: { email },
+          params: { email, resetToken },
         });
       } else {
         await verifyEmail(email, otp);
@@ -114,7 +109,7 @@ export default function VerifyOtp() {
       setLoadingResend(true);
 
       if (purpose === "forgot-password") {
-        await sendForgotPasswordOtp(email);
+        await requestPasswordReset(email);
       } else {
         await resendVerification(email);
       }

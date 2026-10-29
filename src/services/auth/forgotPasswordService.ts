@@ -1,64 +1,42 @@
-import { ExecutionMethod } from "react-native-appwrite";
-import { functions, appwriteConfig } from "../appwrite";
+import { api } from "../apiClient";
+import { tokenStorage } from "../tokenStorage";
 
-type FunctionResponse = {
-  success?: boolean;
-  message?: string;
+type ResetTokenResponse = {
+  reset_token: string;
 };
 
-export const sendForgotPasswordOtp = async (email: string) => {
-  const execution = await functions.createExecution({
-    functionId: appwriteConfig.forgotPasswordFunctionId,
-    body: JSON.stringify({
+export const requestPasswordReset = async (email: string) => {
+  await api.post(
+    "/api/auth/password-reset/request",
+    { email: email.trim() },
+    false,
+  );
+};
+
+export const verifyPasswordResetCode = async (email: string, code: string) => {
+  const data = await api.post<ResetTokenResponse>(
+    "/api/auth/password-reset/verify",
+    { email: email.trim(), code: code.trim() },
+    false,
+  );
+
+  return data.reset_token;
+};
+
+export const confirmPasswordReset = async (
+  email: string,
+  resetToken: string,
+  newPassword: string,
+) => {
+  await api.post(
+    "/api/auth/password-reset/confirm",
+    {
       email: email.trim(),
-    }),
-    method: ExecutionMethod.POST,
-    async: false,
-    headers: {
-      "Content-Type": "application/json",
+      reset_token: resetToken,
+      new_password: newPassword,
     },
-  });
+    false,
+  );
 
-  if (execution.responseStatusCode !== 200) {
-    throw new Error("Forgot password function failed");
-  }
-
-  let result: FunctionResponse | null = null;
-
-  try {
-    result = JSON.parse(execution.responseBody);
-  } catch {
-    result = null;
-  }
-
-  if (result?.success === false) {
-    throw new Error(result.message || "Unable to send OTP.");
-  }
-};
-
-export const resetPassword = async (email: string, newPassword: string) => {
-  const execution = await functions.createExecution({
-    functionId: appwriteConfig.verifyForgotPasswordFunctionId,
-    body: JSON.stringify({
-      action: "reset-password",
-      email: email.trim(),
-      newPassword,
-    }),
-    method: ExecutionMethod.POST,
-    async: false,
-  });
-
-  let result: FunctionResponse;
-
-  try {
-    result = JSON.parse(execution.responseBody);
-  } catch {
-    throw new Error("Unable to reset password right now. Please try again.");
-  }
-
-  if (!result.success) {
-    throw new Error(
-      result.message || "Unable to reset password. Please try again.",
-    );
-  }
+  await tokenStorage.clear();
 };

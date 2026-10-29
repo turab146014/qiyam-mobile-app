@@ -2,20 +2,16 @@ import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppwriteException } from "react-native-appwrite";
+import { ApiError } from "@/services/apiClient";
 
 import AuthButton from "../../components/auth/AuthButton";
 import PasswordInput from "../../components/auth/PasswordInput";
 
-import { resetPassword } from "../../services/auth/forgotPasswordService";
+import { confirmPasswordReset } from "@/services/forgotPasswordService";
 import { getPasswordStrength } from "../../utils/auth/passwordStrength";
 
 function getResetErrorMessage(error: unknown): string {
-  if (error instanceof AppwriteException || error instanceof TypeError) {
-    return "Couldn't reset your password. Please check your internet connection and try again.";
-  }
-
-  if (error instanceof Error && error.message) {
+  if (error instanceof ApiError) {
     return error.message;
   }
 
@@ -24,7 +20,10 @@ function getResetErrorMessage(error: unknown): string {
 
 export default function ResetPassword() {
   const router = useRouter();
-  const { email } = useLocalSearchParams<{ email?: string }>();
+  const { email, resetToken } = useLocalSearchParams<{
+    email?: string;
+    resetToken?: string;
+  }>();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -43,6 +42,13 @@ export default function ResetPassword() {
 
     if (!email) {
       setNewPasswordError("Email address is missing");
+      return;
+    }
+
+    if (!resetToken) {
+      setNewPasswordError(
+        "Your reset session has expired. Please request a new code.",
+      );
       return;
     }
 
@@ -69,11 +75,11 @@ export default function ResetPassword() {
     setIsResetting(true);
 
     try {
-      await resetPassword(email, newPassword);
+      await confirmPasswordReset(email, resetToken, newPassword);
 
       Alert.alert(
         "Password updated",
-        "Your password has been changed. Please sign in with your new password.",
+        "Your password has been changed and you've been signed out on all devices. Please sign in with your new password.",
         [{ text: "OK", onPress: () => router.dismissTo("/login") }],
       );
     } catch (error) {
