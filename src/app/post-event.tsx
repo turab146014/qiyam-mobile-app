@@ -37,6 +37,7 @@ export default function PostMajlis() {
   const [loadError, setLoadError] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -153,9 +154,20 @@ export default function PostMajlis() {
         </View>
 
         <Pressable
+          onPress={() => router.push("./account")}
+          className="ml-4 h-11 w-11 items-center justify-center rounded-full bg-[#e8f1ee]"
+        >
+          <MaterialCommunityIcons
+            name="account-outline"
+            size={22}
+            color="#025e44"
+          />
+        </Pressable>
+
+        <Pressable
           onPress={handleLogout}
           disabled={isLoggingOut}
-          className="ml-4 h-11 w-11 items-center justify-center rounded-full bg-[#ffd5d5]"
+          className="ml-2 h-11 w-11 items-center justify-center rounded-full bg-[#ffd5d5]"
         >
           <MaterialCommunityIcons name="logout" size={20} color="red" />
         </Pressable>
